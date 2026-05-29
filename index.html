@@ -935,7 +935,16 @@ function nid(a){return a.length?Math.max(...a.map(x=>x.id))+1:1;}
 function save(){localStorage.setItem('ky3_members',JSON.stringify(MEMBERS));localStorage.setItem('ky3_entries',JSON.stringify(entries));}
 
 // ── SCREENS ──
-function goToApp(){currentRole='candidate';document.getElementById('screen-welcome').classList.add('hidden');document.getElementById('app').style.display='block';applyRole();updHeader();render();renderPerfTab();initReminder();restoreTimers();updateLeaveBadge();renderLeaves();runAutoAbsent();}
+function goToApp(){
+  currentRole='candidate';
+  document.getElementById('screen-welcome').classList.add('hidden');
+  document.getElementById('app').style.display='block';
+  applyRole();updHeader();render();renderPerfTab();
+  initReminder();restoreTimers();
+  updateLeaveBadge();renderLeaves();
+  runAutoAbsent();
+  setInterval(runAutoAbsent,60000);
+}
 function goToAdminPin(){document.getElementById('screen-welcome').classList.add('hidden');document.getElementById('screen-pin').classList.remove('hidden');setTimeout(()=>document.getElementById('pin-input').focus(),100);}
 function backToWelcome(){document.getElementById('pin-input').value='';document.getElementById('pin-err').style.display='none';document.getElementById('screen-pin').classList.add('hidden');document.getElementById('screen-welcome').classList.remove('hidden');}
 function submitPin(){
@@ -943,7 +952,11 @@ function submitPin(){
   currentRole='admin';
   document.getElementById('screen-pin').classList.add('hidden');
   document.getElementById('app').style.display='block';
-  applyRole();updHeader();render();renderPerfTab();initReminder();restoreTimers();updateLeaveBadge();renderLeaves();runAutoAbsent();
+  applyRole();updHeader();render();renderPerfTab();
+  initReminder();restoreTimers();
+  updateLeaveBadge();renderLeaves();
+  runAutoAbsent();
+  setInterval(runAutoAbsent,60000);
 }
 function signOut(){document.getElementById('app').style.display='none';document.getElementById('pin-input').value='';document.getElementById('pin-err').style.display='none';document.getElementById('screen-pin').classList.add('hidden');document.getElementById('screen-welcome').classList.remove('hidden');currentRole='';}
 function applyRole(){
@@ -1974,15 +1987,7 @@ function exportAttCSV(){
 // Seed demo attendance for existing entries
 
 (function(){
-  currentRole='admin';
-  document.getElementById('screen-welcome').classList.add('hidden');
-  document.getElementById('app').style.display='block';
-  applyRole();updHeader();render();renderPerfTab();
-  initReminder();restoreTimers();
-  updateLeaveBadge();renderLeaves();
-  runAutoAbsent();
-  // Check auto-absent every minute
-  setInterval(runAutoAbsent,60000);
+  updHeader();
 })();
 </script>
 </body>
