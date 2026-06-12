@@ -897,15 +897,52 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
   </div>
 </div>
 
+<div id="fb-loader" style="display:none;position:fixed;inset:0;background:rgba(247,247,245,.85);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:12px;">
+  <div style="width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;"></div>
+  <div style="font-size:13px;color:var(--t2);font-weight:500;">Loading team data…</div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
 <div class="toast" id="toast"></div>
 
 <script>
-// Admin PIN — stored in localStorage so it can be changed
-function getAdminPin(){return localStorage.getItem('ky3_admin_pin')||'1234';}
-function setAdminPin(pin){localStorage.setItem('ky3_admin_pin',pin);}
+// ── FIREBASE CONFIG ──
+const FB_URL='https://kyrosity-tracker-default-rtdb.asia-southeast1.firebasedatabase.app';
 
-// ── SEED demo data with a full month of entries ──
-// Wipe all stored data so tracker starts completely fresh
+// Firebase helpers — read and write using REST API
+async function fbGet(path){
+  try{
+    const r=await fetch(`${FB_URL}/${path}.json`);
+    const d=await r.json();
+    return d||null;
+  }catch(e){console.error('fbGet error',e);return null;}
+}
+async function fbSet(path,data){
+  try{
+    await fetch(`${FB_URL}/${path}.json`,{method:'PUT',body:JSON.stringify(data)});
+  }catch(e){console.error('fbSet error',e);}
+}
+async function fbPatch(path,data){
+  try{
+    await fetch(`${FB_URL}/${path}.json`,{method:'PATCH',body:JSON.stringify(data)});
+  }catch(e){console.error('fbPatch error',e);}
+}
+async function fbDelete(path){
+  try{
+    await fetch(`${FB_URL}/${path}.json`,{method:'DELETE'});
+  }catch(e){console.error('fbDelete error',e);}
+}
+
+// ── Admin PIN — stored in Firebase ──
+async function getAdminPin(){
+  const pin=await fbGet('config/admin_pin');
+  return pin||'1234';
+}
+async function setAdminPin(pin){
+  await fbSet('config/admin_pin',pin);
+}
+
+// Wipe old localStorage
 ['ky3_members','ky3_entries','ky3_clocks','ky3_leaves','ky3_att'].forEach(k=>localStorage.removeItem(k));
 
 const COLORS=[
@@ -921,42 +958,81 @@ const STATUS_META={
 
 let currentRole='',selColor=0,newMemberRole='acd',fqAcd='',fqEditor='';
 let selectedPerfMid=null;
-let MEMBERS=JSON.parse(localStorage.getItem('ky3_members')||'[]');
-let entries=JSON.parse(localStorage.getItem('ky3_entries')||'[]');
-let clockData=JSON.parse(localStorage.getItem('ky3_clocks')||'{}');
-let leaveRequests=JSON.parse(localStorage.getItem('ky3_leaves')||'[]');
-let attData=JSON.parse(localStorage.getItem('ky3_att')||'{}');
+let MEMBERS=[], entries=[], clockData={}, leaveRequests=[], attData={};
 let curDate=new Date();
 
 function fd(d){return d.toISOString().split('T')[0];}
 function today(){return fd(new Date());}
 function ini(n){return n.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
 function nid(a){return a.length?Math.max(...a.map(x=>x.id))+1:1;}
-function save(){localStorage.setItem('ky3_members',JSON.stringify(MEMBERS));localStorage.setItem('ky3_entries',JSON.stringify(entries));}
+
+// ── Firebase save functions ──
+async function saveMembers(){await fbSet('members',MEMBERS);}
+async function saveEntries(){await fbSet('entries',entries);}
+async function saveClock(){await fbSet('clocks',clockData);}
+async function saveLeaves(){await fbSet('leaves',leaveRequests);}
+async function saveAtt(){await fbSet('attendance',attData);}
+function save(){saveMembers();saveEntries();}
+
+// ── Load all data from Firebase ──
+async function loadAllData(){
+  showLoader(true);
+  const [m,e,c,l,a]=await Promise.all([
+    fbGet('members'),
+    fbGet('entries'),
+    fbGet('clocks'),
+    fbGet('leaves'),
+    fbGet('attendance'),
+  ]);
+  MEMBERS=m||[];
+  entries=e||[];
+  clockData=c||{};
+  leaveRequests=l||[];
+  attData=a||{};
+  // Convert Firebase arrays (objects with numeric keys) to arrays if needed
+  if(!Array.isArray(MEMBERS)) MEMBERS=Object.values(MEMBERS);
+  if(!Array.isArray(entries)) entries=Object.values(entries);
+  if(!Array.isArray(leaveRequests)) leaveRequests=Object.values(leaveRequests);
+  showLoader(false);
+}
+
+function showLoader(show){
+  const el=document.getElementById('fb-loader');
+  if(el) el.style.display=show?'flex':'none';
+}
 
 // ── SCREENS ──
-function goToApp(){
+async function goToApp(){
   currentRole='candidate';
   document.getElementById('screen-welcome').classList.add('hidden');
   document.getElementById('app').style.display='block';
-  applyRole();updHeader();render();renderPerfTab();
+  applyRole();updHeader();
+  await loadAllData();
+  render();renderPerfTab();
   initReminder();restoreTimers();
   updateLeaveBadge();renderLeaves();
   runAutoAbsent();
   setInterval(runAutoAbsent,60000);
+  // Poll for updates every 15 seconds
+  setInterval(async()=>{await loadAllData();render();renderLeaves();updateLeaveBadge();},15000);
 }
 function goToAdminPin(){document.getElementById('screen-welcome').classList.add('hidden');document.getElementById('screen-pin').classList.remove('hidden');setTimeout(()=>document.getElementById('pin-input').focus(),100);}
 function backToWelcome(){document.getElementById('pin-input').value='';document.getElementById('pin-err').style.display='none';document.getElementById('screen-pin').classList.add('hidden');document.getElementById('screen-welcome').classList.remove('hidden');}
-function submitPin(){
-  if(document.getElementById('pin-input').value!==getAdminPin()){document.getElementById('pin-err').style.display='block';document.getElementById('pin-input').value='';return;}
+async function submitPin(){
+  const enteredPin=document.getElementById('pin-input').value;
+  const correctPin=await getAdminPin();
+  if(enteredPin!==correctPin){document.getElementById('pin-err').style.display='block';document.getElementById('pin-input').value='';return;}
   currentRole='admin';
   document.getElementById('screen-pin').classList.add('hidden');
   document.getElementById('app').style.display='block';
-  applyRole();updHeader();render();renderPerfTab();
+  applyRole();updHeader();
+  await loadAllData();
+  render();renderPerfTab();
   initReminder();restoreTimers();
   updateLeaveBadge();renderLeaves();
   runAutoAbsent();
   setInterval(runAutoAbsent,60000);
+  setInterval(async()=>{await loadAllData();render();renderLeaves();updateLeaveBadge();},15000);
 }
 function signOut(){document.getElementById('app').style.display='none';document.getElementById('pin-input').value='';document.getElementById('pin-err').style.display='none';document.getElementById('screen-pin').classList.add('hidden');document.getElementById('screen-welcome').classList.remove('hidden');currentRole='';}
 function applyRole(){
@@ -1027,7 +1103,7 @@ function statusWidget(mid){
 function toggleMenu(mid,ev){ev.stopPropagation();const menu=document.getElementById('smenu-'+mid);const was=menu.classList.contains('open');closeAllMenus();if(!was)menu.classList.add('open');}
 function closeAllMenus(){document.querySelectorAll('.smenu.open').forEach(m=>m.classList.remove('open'));}
 document.addEventListener('click',closeAllMenus);
-function setStatus(mid,status,ev){
+async function setStatus(mid,status,ev){
   if(ev)ev.stopPropagation();
   const sel=fd(curDate);
   const idx=entries.findIndex(x=>x.mid===mid&&x.date===sel);
@@ -1262,7 +1338,7 @@ function updateLogFields(){
   document.getElementById('editor-fields').style.display=isEd?'block':'none';
 }
 function closeLog(){document.getElementById('log-modal').classList.remove('open');}
-function saveLog(){
+async function saveLog(){
   const mid=+document.getElementById('lf-member').value;
   if(!mid){showT('Select your name.');return;}
   const date=document.getElementById('lf-date').value||fd(curDate);
@@ -1282,7 +1358,7 @@ function saveLog(){
     blocker:document.getElementById('lf-bl').value,priority:'Normal',
     notes:document.getElementById('lf-notes').value,status:''
   });
-  save();markAttendance(mid,'present');closeLog();render();showT('Log submitted ✓');
+  markAttendance(mid,'present');await saveEntries();await saveAtt();closeLog();render();showT('Log submitted ✓');
 }
 
 // ── ADMIN MODALS ──
@@ -1309,7 +1385,7 @@ function openAdminAcd(mid=null){
   document.getElementById('admin-acd-modal').classList.add('open');
 }
 function closeAdminAcd(){document.getElementById('admin-acd-modal').classList.remove('open');}
-function saveAdminAcd(){
+async function saveAdminAcd(){
   const mid=+document.getElementById('aa-member').value;if(!mid){showT('Select a member.');return;}
   const date=document.getElementById('aa-date').value||fd(curDate);
   const cur=entries.find(e=>e.mid===mid&&e.date===date);
@@ -1321,7 +1397,7 @@ function saveAdminAcd(){
     notes:document.getElementById('aa-notes').value,status:cur?cur.status:''};
   const idx=entries.findIndex(e=>e.mid===mid&&e.date===date);
   if(idx>-1)entries[idx]=ent;else entries.push(ent);
-  save();closeAdminAcd();render();showT('Saved ✓');
+  await saveEntries();closeAdminAcd();render();showT('Saved ✓');
 }
 function openAdminEditor(mid=null){
   document.getElementById('ae-member').innerHTML=MEMBERS.filter(m=>m.role==='editor').map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
@@ -1341,7 +1417,7 @@ function openAdminEditor(mid=null){
   document.getElementById('admin-editor-modal').classList.add('open');
 }
 function closeAdminEditor(){document.getElementById('admin-editor-modal').classList.remove('open');}
-function saveAdminEditor(){
+async function saveAdminEditor(){
   const mid=+document.getElementById('ae-member').value;if(!mid){showT('Select a member.');return;}
   const date=document.getElementById('ae-date').value||fd(curDate);
   const cur=entries.find(e=>e.mid===mid&&e.date===date);
@@ -1352,7 +1428,7 @@ function saveAdminEditor(){
     notes:document.getElementById('ae-notes').value,status:cur?cur.status:''};
   const idx=entries.findIndex(e=>e.mid===mid&&e.date===date);
   if(idx>-1)entries[idx]=ent;else entries.push(ent);
-  save();closeAdminEditor();render();showT('Saved ✓');
+  await saveEntries();closeAdminEditor();render();showT('Saved ✓');
 }
 
 // ── ADD MEMBER ──
@@ -1361,10 +1437,10 @@ function pickC(i){selColor=i;buildSwatches();}
 function selectMemberRole(r){newMemberRole=r;document.getElementById('rt-acd').className='rt-btn'+(r==='acd'?' on acd':'');document.getElementById('rt-editor').className='rt-btn'+(r==='editor'?' on editor':'');}
 function openAddMember(){newMemberRole='acd';selColor=0;document.getElementById('m-name').value='';document.getElementById('m-spec').value='';selectMemberRole('acd');buildSwatches();document.getElementById('member-modal').classList.add('open');}
 function closeMember(){document.getElementById('member-modal').classList.remove('open');}
-function saveMember(){
+async function saveMember(){
   const name=document.getElementById('m-name').value.trim();if(!name){showT('Enter a name.');return;}
   MEMBERS.push({id:nid(MEMBERS),name,spec:document.getElementById('m-spec').value.trim()||'Team Member',ci:selColor,role:newMemberRole});
-  save();closeMember();render();renderMemberPicker();showT(name+' added ✓');
+  await saveMembers();closeMember();render();renderMemberPicker();showT(name+' added ✓');
 }
 
 function exportCSV(){
@@ -1385,17 +1461,18 @@ function openChangePin(){
   setTimeout(()=>document.getElementById('cp-current').focus(),100);
 }
 function closeChangePin(){document.getElementById('change-pin-modal').classList.remove('open');}
-function saveNewPin(){
+async function saveNewPin(){
   const current=document.getElementById('cp-current').value;
   const newPin=document.getElementById('cp-new').value;
   const confirm=document.getElementById('cp-confirm').value;
   const errEl=document.getElementById('cp-err');
   errEl.style.display='none';
-  if(current!==getAdminPin()){errEl.textContent='Current PIN is incorrect.';errEl.style.display='block';document.getElementById('cp-current').value='';return;}
+  const correctPin=await getAdminPin();
+  if(current!==correctPin){errEl.textContent='Current PIN is incorrect.';errEl.style.display='block';document.getElementById('cp-current').value='';return;}
   if(newPin.length<4){errEl.textContent='New PIN must be at least 4 digits.';errEl.style.display='block';return;}
   if(!/^\d+$/.test(newPin)){errEl.textContent='PIN must contain numbers only.';errEl.style.display='block';return;}
   if(newPin!==confirm){errEl.textContent='New PINs do not match.';errEl.style.display='block';document.getElementById('cp-confirm').value='';return;}
-  setAdminPin(newPin);
+  await setAdminPin(newPin);
   closeChangePin();
   showT('PIN updated successfully ✓');
 }
@@ -1407,8 +1484,6 @@ function showT(msg){const el=document.getElementById('toast');el.textContent=msg
 // CLOCK IN / CLOCK OUT
 // ══════════════════════════════════
 let clockTimers={};  // mid → interval ID
-
-function saveClock(){localStorage.setItem('ky3_clocks',JSON.stringify(clockData));}
 
 function todayKey(mid){return `${mid}_${today()}`;}
 
@@ -1438,25 +1513,25 @@ function clockBar(mid){
   }
 }
 
-function clockIn(mid){
+async function clockIn(mid){
   const key=todayKey(mid);
   if(clockData[key]&&clockData[key].clockIn&&!clockData[key].clockOut){showT('Already clocked in.');return;}
   clockData[key]={clockIn:Date.now(),clockOut:null,total:clockData[key]?.total||0};
-  saveClock();
+  await saveClock();
   markAttendance(mid,'present'); // auto-mark present on clock-in
   render();
   startLiveTimer(mid);
   showT('Clocked in ✓');
 }
 
-function clockOut(mid){
+async function clockOut(mid){
   const key=todayKey(mid);
   if(!clockData[key]||!clockData[key].clockIn){showT('Not clocked in.');return;}
   const now=Date.now();
   const session=now-clockData[key].clockIn;
   clockData[key].clockOut=now;
   clockData[key].total=(clockData[key].total||0)+session;
-  saveClock();
+  await saveClock();
   stopLiveTimer(mid);
   render();
   showT('Clocked out ✓ — '+fmtDurShort(session)+' session');
@@ -1553,7 +1628,6 @@ function initReminder(){
 // ══════════════════════════════════
 // LEAVE REQUEST SYSTEM
 // ══════════════════════════════════
-function saveLeaves(){localStorage.setItem('ky3_leaves',JSON.stringify(leaveRequests));}
 function leavenid(){return leaveRequests.length?Math.max(...leaveRequests.map(x=>x.id))+1:1;}
 
 const LEAVE_TYPE_META={
@@ -1576,7 +1650,7 @@ function openLeaveRequest(){
 }
 function closeLeaveRequest(){document.getElementById('leave-modal').classList.remove('open');}
 
-function submitLeaveRequest(){
+async function submitLeaveRequest(){
   const mid=+document.getElementById('lv-member').value;
   if(!mid){showT('Select a member.');return;}
   const from=document.getElementById('lv-from').value;
@@ -1593,38 +1667,38 @@ function submitLeaveRequest(){
     reviewedAt:null, reviewNote:''
   };
   leaveRequests.push(req);
-  saveLeaves();
+  await saveLeaves();
   closeLeaveRequest();
   updateLeaveBadge();
   renderLeaves();
   showT('Leave request submitted ✓');
 }
 
-function approveLeave(id){
+async function approveLeave(id){
   const req=leaveRequests.find(r=>r.id===id);
   if(!req) return;
   req.status='approved';
   req.reviewedAt=new Date().toISOString();
   // Auto-mark attendance for each day in range
   applyLeaveToAttendance(req);
-  saveLeaves();
+  await saveLeaves();
   updateLeaveBadge();
   renderLeaves();
   showT('Leave approved ✓');
 }
 
-function rejectLeave(id){
+async function rejectLeave(id){
   const req=leaveRequests.find(r=>r.id===id);
   if(!req) return;
   req.status='rejected';
   req.reviewedAt=new Date().toISOString();
-  saveLeaves();
+  await saveLeaves();
   updateLeaveBadge();
   renderLeaves();
   showT('Leave rejected.');
 }
 
-function applyLeaveToAttendance(req){
+async function applyLeaveToAttendance(req){
   const from=new Date(req.from+'T12:00:00');
   const to=new Date(req.to+'T12:00:00');
   for(let d=new Date(from);d<=to;d.setDate(d.getDate()+1)){
@@ -1638,7 +1712,7 @@ function applyLeaveToAttendance(req){
       attData[attKey(req.mid,ds)]={status:attStatus,manual:true,date:ds,mid:req.mid,note:`Leave approved: ${LEAVE_TYPE_META[req.type].l}`};
     }
   }
-  saveAtt();
+  await saveAtt();
 }
 
 function updateLeaveBadge(){
@@ -1723,23 +1797,20 @@ function renderLeaves(){
 }
 
 // ── AUTO-ABSENT: mark absent if no activity logged by midnight ──
-function runAutoAbsent(){
+async function runAutoAbsent(){
   const t=today();
   const now=new Date();
-  // Only run after 11:59 PM or on next-day first load
-  MEMBERS.forEach(m=>{
+  for(const m of MEMBERS){
     const key=attKey(m.id,t);
-    if(attData[key]) return; // already marked
-    // Check if any log or clock exists
+    if(attData[key]) continue;
     const hasLog=entries.some(e=>e.mid===m.id&&e.date===t);
     const hasClock=clockData[`${m.id}_${t}`]?.clockIn;
-    // Check approved leave
     const hasLeave=leaveRequests.some(r=>r.mid===m.id&&r.status==='approved'&&r.from<=t&&r.to>=t);
     if(!hasLog&&!hasClock&&!hasLeave&&now.getHours()>=23){
       attData[key]={status:'absent',auto:true,date:t,mid:m.id,note:'Auto-marked: no activity'};
-      saveAtt();
+      await saveAtt();
     }
-  });
+  }
 }
 
 // Seed demo leave requests
@@ -1752,22 +1823,21 @@ const ATT_META={
   onleave: {l:'On Leave', cls:'onleave', dot:'#1a4e8a'},
 };
 
-function saveAtt(){localStorage.setItem('ky3_att',JSON.stringify(attData));}
 function attKey(mid,date){return `${mid}_${date}`;}
 
-function markAttendance(mid,status,date=null){
+async function markAttendance(mid,status,date=null){
   const d=date||today();
   const key=attKey(mid,d);
   // Don't overwrite manual admin override
   if(attData[key]&&attData[key].manual&&status!=='manual') return;
   attData[key]={status,auto:!date,date:d,mid};
-  saveAtt();
+  await saveAtt();
 }
 
-function overrideAttendance(mid,date,status){
-  if(!status){delete attData[attKey(mid,date)];saveAtt();renderAttendance();return;}
+async function overrideAttendance(mid,date,status){
+  if(!status){delete attData[attKey(mid,date)];await saveAtt();renderAttendance();return;}
   attData[attKey(mid,date)]={status,manual:true,date,mid};
-  saveAtt();renderAttendance();
+  await saveAtt();renderAttendance();
   showT('Attendance updated ✓');
 }
 
