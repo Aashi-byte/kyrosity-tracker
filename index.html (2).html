@@ -1,0 +1,2075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kyrosity — Daily Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f7f7f5;--surface:#fff;--border:#e4e4e0;--border-s:#c8c8c2;
+  --text:#1a1a18;--t2:#5a5a56;--t3:#9a9a94;
+  --accent:#c8512a;--accent-h:#b04422;
+  --green:#2a7a45;--green-l:#d8f0e4;
+  --blue:#1a4e8a;--amber:#b07010;
+  --purple:#6330a0;--purple-l:#ede8f8;
+  --r:8px;--rl:12px;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh;}
+
+/* ── SCREENS ── */
+.screen{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;align-items:center;justify-content:center;}
+.screen.hidden{display:none;}
+
+/* ── WELCOME ── */
+.welcome-box{background:#fff;border:1px solid var(--border);border-radius:var(--rl);width:440px;max-width:94vw;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.1);text-align:center;}
+.welcome-head{padding:40px 36px 28px;}
+.welcome-logo{display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:20px;}
+.welcome-dot{width:11px;height:11px;border-radius:50%;background:var(--accent);}
+.welcome-name{font-size:24px;font-weight:700;letter-spacing:-.03em;}
+.welcome-title{font-size:15px;font-weight:700;margin-bottom:10px;}
+.welcome-desc{font-size:13px;color:var(--t2);line-height:1.7;max-width:320px;margin:0 auto;}
+.welcome-foot{padding:20px 36px 32px;border-top:1px solid var(--border);}
+.welcome-foot .btn{width:100%;justify-content:center;font-size:14px;padding:11px 20px;}
+.welcome-admin-link{margin-top:12px;font-size:11px;color:var(--t3);}
+.welcome-admin-link a{color:var(--t3);text-decoration:underline;cursor:pointer;}
+.welcome-admin-link a:hover{color:var(--t2);}
+
+/* ── PIN ── */
+.pin-box{background:#fff;border:1px solid var(--border);border-radius:var(--rl);width:380px;max-width:94vw;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.1);}
+.pin-head{padding:22px 26px 16px;border-bottom:1px solid var(--border);}
+.pin-head-logo{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:3px;}
+.pin-head-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);}
+.pin-head-sub{font-size:12px;color:var(--t3);}
+.pin-body{padding:22px 26px;}
+.pin-body label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--t3);display:block;margin-bottom:6px;}
+.pin-body input{width:100%;padding:10px 12px;border:1px solid var(--border-s);border-radius:var(--r);font-family:'DM Mono',monospace;font-size:18px;letter-spacing:.3em;color:var(--text);background:#fff;outline:none;text-align:center;}
+.pin-body input:focus{border-color:var(--accent);}
+.pin-err{font-size:12px;color:#a02020;margin-top:6px;text-align:center;display:none;}
+.pin-foot{padding:14px 26px;border-top:1px solid var(--border);display:flex;gap:8px;}
+
+/* ── TOPBAR ── */
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 28px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.brand{font-size:16px;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:8px;}
+.brand-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);}
+.brand-sub{font-size:11px;font-weight:500;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;}
+.topbar-r{display:flex;align-items:center;gap:8px;}
+.role-pill{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;}
+.role-pill.admin{background:#fde8d8;color:#8a3010;}
+.role-pill.candidate{background:#dceef8;color:#0f3a6a;}
+
+/* ── NAV TABS ── */
+.nav-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);background:#fff;padding:0 28px;position:sticky;top:52px;z-index:40;}
+.nav-tab{padding:11px 18px;font-size:13px;font-weight:600;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .14s;background:none;border-top:none;border-left:none;border-right:none;}
+.nav-tab:hover{color:var(--text);}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:var(--r);font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .14s;line-height:1;}
+.btn-p{background:var(--accent);color:#fff;}.btn-p:hover{background:var(--accent-h);}
+.btn-g{background:transparent;color:var(--t2);border:1px solid var(--border-s);}.btn-g:hover{background:var(--bg);}
+.btn-sm{padding:5px 11px;font-size:12px;}
+
+/* ── PAGE ── */
+.page{max-width:1100px;margin:0 auto;padding:24px 24px;}
+.tab-view{display:none;}.tab-view.active{display:block;}
+
+/* DATE ROW */
+.date-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
+.date-h{font-size:22px;font-weight:700;letter-spacing:-.025em;}
+.date-s{font-size:11px;color:var(--t3);margin-top:3px;font-family:'DM Mono',monospace;}
+.date-nav{display:flex;align-items:center;gap:6px;}
+.date-nav input[type=date]{font-family:'DM Mono',monospace;font-size:12px;padding:6px 10px;border:1px solid var(--border-s);border-radius:var(--r);background:#fff;color:var(--text);outline:none;}
+.narr{width:32px;height:32px;border:1px solid var(--border-s);border-radius:var(--r);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--t2);font-size:15px;transition:all .14s;}
+.narr:hover{background:var(--bg);}
+
+/* SUMMARY */
+.sum-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
+.sc{background:#fff;border:1px solid var(--border);border-radius:var(--rl);padding:16px 18px;}
+.sc-l{font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.sc-v{font-size:28px;font-weight:700;letter-spacing:-.03em;}
+.sc-n{font-size:11px;color:var(--t3);margin-top:3px;font-family:'DM Mono',monospace;}
+.sc.co{border-top:3px solid var(--accent);}
+.sc.cg{border-top:3px solid var(--green);}
+.sc.cb{border-top:3px solid var(--blue);}
+.sc.cp{border-top:3px solid var(--purple);}
+
+/* SECTION */
+.team-section{margin-bottom:32px;}
+.sec-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.sec-label{display:flex;align-items:center;gap:10px;}
+.sec-tag{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:4px 10px;border-radius:20px;}
+.sec-tag.acd{background:#fde8d8;color:#8a3010;}
+.sec-tag.editor{background:var(--purple-l);color:var(--purple);}
+.sec-t{font-size:15px;font-weight:700;}
+.sec-count{font-size:12px;color:var(--t3);font-family:'DM Mono',monospace;}
+.search-inp{padding:7px 10px 7px 30px;border:1px solid var(--border-s);border-radius:var(--r);font-family:'Inter',sans-serif;font-size:12px;width:180px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 16 16' fill='none' stroke='%239a9a94' stroke-width='2'%3E%3Ccircle cx='7' cy='7' r='5'/%3E%3Cpath d='m13 13-3-3'/%3E%3C/svg%3E") 8px center/13px no-repeat;outline:none;color:var(--text);}
+.search-inp:focus{border-color:var(--accent);}
+.section-divider{border:none;border-top:1px solid var(--border);margin:8px 0 28px;}
+
+/* CARDS */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;}
+.acard{background:#fff;border:1px solid var(--border);border-radius:var(--rl);overflow:visible;transition:box-shadow .15s;}
+.acard:hover{box-shadow:0 2px 12px rgba(0,0,0,.07);}
+.acard.acd-card{border-left:3px solid var(--accent);}
+.acard.editor-card{border-left:3px solid var(--purple);}
+.acard-top{display:flex;align-items:center;gap:10px;padding:13px 14px 11px;border-bottom:1px solid var(--border);}
+.av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
+.aname{font-weight:600;font-size:13px;color:var(--text);}
+.aspec{font-size:11px;color:var(--t3);margin-top:1px;}
+.status-corner{margin-left:auto;flex-shrink:0;position:relative;}
+.sbadge{font-size:11px;font-weight:600;padding:3px 9px 3px 7px;border-radius:20px;cursor:pointer;border:1px solid var(--border-s);font-family:'Inter',sans-serif;background:#fff;color:var(--t2);display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+.sdot{width:6px;height:6px;border-radius:50%;background:#ccc;flex-shrink:0;}
+.s-active .sdot{background:var(--green);} .s-active{color:var(--green);}
+.s-inactive .sdot{background:#888;}       .s-inactive{color:#555;}
+.s-break .sdot{background:var(--amber);}  .s-break{color:var(--amber);}
+.smenu{display:none;position:absolute;right:0;top:calc(100% + 5px);background:#fff;border:1px solid var(--border-s);border-radius:var(--r);z-index:100;min-width:140px;box-shadow:0 4px 16px rgba(0,0,0,.1);overflow:hidden;}
+.smenu.open{display:block;}
+.smopt{padding:8px 12px;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--t2);}
+.smopt:hover{background:var(--bg);color:var(--text);}
+.smopt-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.acard-body{padding:11px 14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;}
+.acard-body.two{grid-template-columns:1fr 1fr;}
+.metric{background:var(--bg);border-radius:var(--r);padding:8px 10px;}
+.metric-l{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;}
+.metric-v{font-size:17px;font-weight:700;color:var(--text);font-family:'DM Mono',monospace;}
+.metric-v.em{font-size:13px;color:var(--t3);font-weight:400;font-family:'Inter',sans-serif;}
+.acard-prog{padding:9px 14px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.pb{flex:1;height:4px;background:#edede8;border-radius:10px;overflow:hidden;}
+.pf{height:100%;border-radius:10px;background:var(--accent);transition:width .35s;}
+.pf.g{background:var(--green);}
+.prog-lbl{font-size:11px;color:var(--t3);}
+.prog-pct{font-family:'DM Mono',monospace;font-size:11px;color:var(--t2);min-width:80px;text-align:right;}
+.acard-foot{padding:9px 14px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.proj-txt{font-size:12px;color:var(--t2);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.proj-none{font-size:12px;color:var(--t3);}
+.ab{padding:4px 9px;border:1px solid var(--border-s);border-radius:6px;background:#fff;cursor:pointer;color:var(--t2);font-size:11px;font-weight:600;font-family:'Inter',sans-serif;transition:all .13s;}
+.ab:hover{background:var(--bg);color:var(--text);}
+.lock-lbl{font-size:11px;color:var(--t3);}
+
+/* NOTES */
+.notes-sec{margin-top:8px;}
+.ng{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;}
+.nc{background:#fff;border:1px solid var(--border);border-radius:var(--rl);padding:13px 15px;}
+.nc-who{font-size:12px;font-weight:700;display:flex;align-items:center;gap:7px;margin-bottom:5px;}
+.nc-txt{font-size:13px;color:var(--t2);line-height:1.5;}
+.tag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:12px;background:#fdf0dc;color:#7a4a10;text-transform:uppercase;letter-spacing:.04em;}
+.tag.et{background:var(--purple-l);color:var(--purple);}
+.empty-state{grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--t3);}
+.empty-state .big{font-size:32px;margin-bottom:8px;}
+.empty-state p{font-size:13px;line-height:1.7;}
+
+/* ══════════════════════════════════
+   PERFORMANCE TAB
+══════════════════════════════════ */
+.perf-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:16px;flex-wrap:wrap;}
+.perf-title{font-size:20px;font-weight:800;letter-spacing:-.025em;}
+.perf-sub{font-size:12px;color:var(--t3);margin-top:3px;}
+.perf-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.perf-select{padding:7px 10px;border:1px solid var(--border-s);border-radius:var(--r);font-family:'Inter',sans-serif;font-size:13px;color:var(--text);background:#fff;outline:none;cursor:pointer;}
+.perf-select:focus{border-color:var(--accent);}
+
+/* member picker grid */
+.member-picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:24px;}
+.mp-card{background:#fff;border:1px solid var(--border);border-radius:var(--rl);padding:12px 14px;cursor:pointer;transition:all .14s;display:flex;align-items:center;gap:10px;}
+.mp-card:hover{border-color:var(--border-s);box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.mp-card.selected.acd{border-color:var(--accent);background:#fef6f3;}
+.mp-card.selected.editor{border-color:var(--purple);background:var(--purple-l);}
+.mp-card-name{font-weight:600;font-size:13px;}
+.mp-card-role{font-size:11px;color:var(--t3);margin-top:1px;}
+
+/* report panel */
+.report-panel{background:#fff;border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;}
+.report-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;}
+.report-av{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;}
+.report-name{font-size:17px;font-weight:700;letter-spacing:-.02em;}
+.report-meta{font-size:12px;color:var(--t3);margin-top:2px;}
+.report-month{margin-left:auto;font-size:12px;color:var(--t2);font-weight:600;font-family:'DM Mono',monospace;}
+
+/* KPI row */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border);}
+.kpi{padding:16px 18px;border-right:1px solid var(--border);}
+.kpi:last-child{border-right:none;}
+.kpi-l{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);margin-bottom:5px;}
+.kpi-v{font-size:26px;font-weight:800;letter-spacing:-.03em;}
+.kpi-n{font-size:11px;color:var(--t3);margin-top:2px;font-family:'DM Mono',monospace;}
+.kpi-v.green{color:var(--green);}
+.kpi-v.accent{color:var(--accent);}
+.kpi-v.purple{color:var(--purple);}
+
+/* Charts area */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--border);}
+.chart-block{padding:20px 22px;border-right:1px solid var(--border);}
+.chart-block:last-child{border-right:none;}
+.chart-block.full{grid-column:1/-1;border-right:none;}
+.chart-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);margin-bottom:14px;}
+
+/* Heatmap */
+.heatmap-wrap{overflow-x:auto;}
+.heatmap{display:flex;gap:3px;flex-wrap:wrap;}
+.hm-day{width:22px;height:22px;border-radius:4px;background:#edede8;position:relative;cursor:default;flex-shrink:0;}
+.hm-day.active{background:var(--green);}
+.hm-day.break{background:var(--amber);}
+.hm-day.inactive{background:#c8c8c2;}
+.hm-day.logged{background:#a8d4b8;}
+.hm-day.future{background:#f0f0ee;opacity:.5;}
+.hm-day:hover .hm-tip{display:block;}
+.hm-tip{display:none;position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);background:#1a1a18;color:#fff;font-size:10px;padding:4px 7px;border-radius:4px;white-space:nowrap;z-index:10;font-family:'DM Mono',monospace;}
+.hm-legend{display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap;}
+.hm-leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t3);}
+.hm-leg-dot{width:12px;height:12px;border-radius:3px;}
+
+/* Completion chart */
+.completion-chart{height:120px;display:flex;align-items:flex-end;gap:4px;position:relative;}
+.cc-bar-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0;}
+.cc-bar{width:100%;border-radius:4px 4px 0 0;background:var(--accent);min-height:2px;transition:height .3s;}
+.cc-bar.full{background:var(--green);}
+.cc-label{font-size:9px;color:var(--t3);font-family:'DM Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:28px;text-align:center;}
+.cc-pct{font-size:9px;color:var(--t2);font-family:'DM Mono',monospace;}
+.cc-empty{font-size:12px;color:var(--t3);display:flex;align-items:center;justify-content:center;height:100%;width:100%;}
+
+/* Asset breakdown */
+.asset-list{display:flex;flex-direction:column;gap:8px;}
+.al-row{display:flex;align-items:center;gap:10px;}
+.al-label{font-size:12px;color:var(--t2);min-width:80px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.al-bar-wrap{flex:1;height:8px;background:#edede8;border-radius:10px;overflow:hidden;}
+.al-bar{height:100%;border-radius:10px;background:var(--accent);transition:width .4s;}
+.al-bar.purple{background:var(--purple);}
+.al-val{font-size:12px;font-weight:600;font-family:'DM Mono',monospace;color:var(--text);min-width:28px;text-align:right;}
+
+/* Day log table */
+.day-log{border-top:1px solid var(--border);}
+.day-log-head{padding:14px 22px;display:flex;align-items:center;justify-content:space-between;}
+.day-log-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);}
+.day-table{width:100%;border-collapse:collapse;font-size:12px;}
+.day-table th{padding:8px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--border);background:var(--bg);}
+.day-table td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--t2);vertical-align:middle;}
+.day-table tr:last-child td{border-bottom:none;}
+.day-table tr:hover td{background:var(--bg);}
+.pill{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;}
+.pill.g{background:var(--green-l);color:var(--green);}
+.pill.a{background:#fdf4d4;color:var(--amber);}
+.pill.r{background:#fde8e8;color:#a02020;}
+.no-data{padding:32px;text-align:center;color:var(--t3);font-size:13px;}
+
+/* MODALS */
+.bd{display:none;position:fixed;inset:0;background:rgba(20,20,18,.45);z-index:200;align-items:center;justify-content:center;}
+.bd.open{display:flex;}
+.modal{background:#fff;border-radius:var(--rl);width:560px;max-width:96vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.15);}
+.modal.sm{width:420px;}
+.mh{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.mt{font-size:16px;font-weight:700;}
+.mx{width:28px;height:28px;border:1px solid var(--border-s);border-radius:6px;background:#fff;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;color:var(--t3);}
+.mx:hover{background:var(--bg);color:var(--text);}
+.mb{padding:18px 22px;}
+.mf{padding:13px 22px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fg.full{grid-column:1/-1;}
+.fg label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--t3);}
+.fg input,.fg select,.fg textarea{padding:8px 10px;border:1px solid var(--border-s);border-radius:var(--r);font-family:'Inter',sans-serif;font-size:13px;color:var(--text);background:#fff;outline:none;width:100%;transition:border .13s;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent);}
+.fg textarea{min-height:60px;resize:vertical;}
+.fdiv{grid-column:1/-1;border-top:1px solid var(--border);padding-top:11px;margin-top:1px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);}
+.form-note{grid-column:1/-1;font-size:12px;color:var(--blue);background:#f0f5fc;border:1px solid #a8c4ec;border-radius:var(--r);padding:8px 12px;line-height:1.5;}
+.swatches{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
+.sw{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .13s;}
+.sw:hover,.sw.on{border-color:#1a1a18;transform:scale(1.12);}
+.role-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;}
+.rt-btn{padding:10px 8px;border:1.5px solid var(--border-s);border-radius:var(--r);background:#fff;cursor:pointer;text-align:center;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;color:var(--t2);transition:all .14s;}
+.rt-btn.on.acd{border-color:var(--accent);background:#fef6f3;color:var(--accent);}
+.rt-btn.on.editor{border-color:var(--purple);background:var(--purple-l);color:var(--purple);}
+
+.toast{position:fixed;bottom:20px;right:20px;background:#1a1a18;color:#f7f7f5;padding:9px 16px;border-radius:var(--r);font-size:13px;font-weight:500;z-index:999;transform:translateY(60px);opacity:0;transition:all .22s cubic-bezier(.34,1.56,.64,1);}
+.toast.show{transform:translateY(0);opacity:1;}
+
+/* ── CLOCK IN/OUT ── */
+.clock-bar{padding:8px 14px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--bg);}
+.clock-btn{padding:4px 11px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;border:none;transition:all .13s;letter-spacing:.02em;}
+.clock-btn.in{background:var(--green);color:#fff;}.clock-btn.in:hover{background:#1f5e33;}
+.clock-btn.out{background:#fde8d8;color:var(--accent);border:1px solid var(--accent);}.clock-btn.out:hover{background:#f8d4c0;}
+.clock-time{font-family:'DM Mono',monospace;font-size:11px;color:var(--t2);display:flex;align-items:center;gap:5px;}
+.clock-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.clock-total{font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;}
+
+/* ── REMINDER BANNER ── */
+.reminder-banner{background:#fdf4d4;border:1px solid #e8c84a;border-radius:var(--r);padding:10px 16px;margin-bottom:16px;display:none;align-items:center;justify-content:space-between;gap:10px;}
+.reminder-banner.show{display:flex;}
+.reminder-txt{font-size:13px;color:#6a4a08;font-weight:500;}
+.reminder-dismiss{font-size:11px;color:#8a6a18;cursor:pointer;text-decoration:underline;white-space:nowrap;}
+
+/* ── INDIVIDUAL ATTENDANCE CARDS ── */
+.att-member-section{margin-bottom:28px;}
+.att-member-card{background:#fff;border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:20px;}
+.att-member-card.acd-card{border-left:3px solid var(--accent);}
+.att-member-card.editor-card{border-left:3px solid var(--purple);}
+
+.amc-head{display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid var(--border);}
+.amc-info{flex:1;}
+.amc-name{font-size:15px;font-weight:700;letter-spacing:-.01em;}
+.amc-role{font-size:11px;color:var(--t3);margin-top:2px;}
+.amc-rate{margin-left:auto;text-align:right;}
+.amc-rate-v{font-size:22px;font-weight:800;letter-spacing:-.03em;}
+.amc-rate-l{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-top:1px;}
+
+.amc-stats{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--border);}
+.amc-stat{padding:12px 14px;border-right:1px solid var(--border);text-align:center;}
+.amc-stat:last-child{border-right:none;}
+.amc-stat-v{font-size:20px;font-weight:800;letter-spacing:-.02em;margin-bottom:2px;}
+.amc-stat-l{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;}
+.amc-stat-v.green{color:var(--green);}
+.amc-stat-v.red{color:#a02020;}
+.amc-stat-v.amber{color:var(--amber);}
+.amc-stat-v.blue{color:var(--blue);}
+
+.amc-cal{padding:16px 20px;}
+.amc-cal-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);margin-bottom:12px;}
+.amc-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.amc-day-label{text-align:center;font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;padding:3px 0;}
+.amc-day{border-radius:5px;padding:4px 2px;text-align:center;font-size:11px;font-weight:600;min-height:32px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;}
+.amc-day.empty{background:transparent;}
+.amc-day.weekend{background:#f4f4f2;opacity:.6;}
+.amc-day.future{background:#f4f4f2;opacity:.35;}
+.amc-day.today-hl{outline:2px solid var(--accent);outline-offset:-2px;border-radius:5px;}
+.amc-day.cd-present{background:var(--green-l);color:var(--green);}
+.amc-day.cd-absent{background:#fdeaea;color:#a02020;}
+.amc-day.cd-halfday{background:#fdf4d4;color:var(--amber);}
+.amc-day.cd-onleave{background:#dceef8;color:var(--blue);}
+.amc-day.cd-none{background:var(--bg);color:var(--t3);}
+.amc-day-num{font-size:11px;font-weight:700;line-height:1;}
+.amc-day-tag{font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;line-height:1;}
+
+.amc-bar{display:flex;align-items:center;gap:4px;margin-top:12px;height:8px;border-radius:20px;overflow:hidden;}
+.amc-bar-seg{height:100%;transition:width .4s;}
+.amc-legend{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;}
+.amc-leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t2);}
+.amc-leg-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+.att-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+.att-title{font-size:20px;font-weight:800;letter-spacing:-.025em;}
+.att-sub{font-size:12px;color:var(--t3);margin-top:3px;}
+.att-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.att-select{padding:7px 10px;border:1px solid var(--border-s);border-radius:var(--r);font-family:'Inter',sans-serif;font-size:13px;color:var(--text);background:#fff;outline:none;cursor:pointer;}
+.att-select:focus{border-color:var(--accent);}
+
+/* Attendance summary strip */
+.att-sum{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+.att-sc{background:#fff;border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px;text-align:center;}
+.att-sc-v{font-size:26px;font-weight:800;letter-spacing:-.03em;margin-bottom:3px;}
+.att-sc-l{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--t3);}
+.att-sc.p{border-top:3px solid var(--green);}
+.att-sc.a{border-top:3px solid #a02020;}
+.att-sc.h{border-top:3px solid var(--amber);}
+.att-sc.l{border-top:3px solid var(--blue);}
+
+/* Attendance table */
+.att-table-wrap{background:#fff;border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:24px;}
+.att-table-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.att-table-title{font-size:13px;font-weight:700;}
+.att-table{width:100%;border-collapse:collapse;font-size:13px;}
+.att-table th{padding:9px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--border);background:var(--bg);white-space:nowrap;}
+.att-table td{padding:11px 14px;border-bottom:1px solid var(--border);color:var(--t2);vertical-align:middle;}
+.att-table tr:last-child td{border-bottom:none;}
+.att-table tr:hover td{background:var(--bg);}
+
+/* Attendance pill */
+.ap{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap;}
+.ap.present{background:var(--green-l);color:var(--green);}
+.ap.absent{background:#fdeaea;color:#a02020;}
+.ap.halfday{background:#fdf4d4;color:var(--amber);}
+.ap.onleave{background:#dceef8;color:var(--blue);}
+.ap.notmarked{background:#f0f0ee;color:var(--t3);}
+.ap-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+
+/* Attendance override select */
+.att-sel{font-size:11px;font-weight:600;padding:3px 7px;border:1px solid var(--border-s);border-radius:var(--r);font-family:'Inter',sans-serif;background:#fff;color:var(--t2);cursor:pointer;outline:none;}
+.att-sel:focus{border-color:var(--accent);}
+
+/* Monthly calendar grid */
+.att-cal-wrap{background:#fff;border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;}
+.att-cal-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.att-cal-title{font-size:13px;font-weight:700;}
+.att-member-select{padding:6px 10px;border:1px solid var(--border-s);border-radius:var(--r);font-family:'Inter',sans-serif;font-size:12px;outline:none;background:#fff;}
+.att-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:16px;}
+.att-cal-day-label{text-align:center;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;padding:4px 0;}
+.att-cal-day{border-radius:var(--r);padding:6px 4px;text-align:center;font-size:12px;font-weight:600;min-height:36px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;}
+.att-cal-day.empty{background:transparent;}
+.att-cal-day.today-cell{outline:2px solid var(--accent);outline-offset:-2px;}
+.att-cal-day.future-cell{opacity:.4;}
+.att-cal-day.cd-present{background:var(--green-l);color:var(--green);}
+.att-cal-day.cd-absent{background:#fdeaea;color:#a02020;}
+.att-cal-day.cd-halfday{background:#fdf4d4;color:var(--amber);}
+.att-cal-day.cd-onleave{background:#dceef8;color:var(--blue);}
+.att-cal-day.cd-none{background:var(--bg);color:var(--t3);}
+.att-cal-day.weekend{opacity:.5;}
+.att-day-num{font-size:12px;font-weight:700;}
+.att-day-tag{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+
+/* ── LEAVE REQUEST SYSTEM ── */
+.tab-rel{position:relative;display:inline-block;}
+.leave-badge{position:absolute;top:-5px;right:-8px;background:#a02020;color:#fff;font-size:9px;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:none;align-items:center;justify-content:center;padding:0 3px;}
+.leave-badge.show{display:flex;}
+.leave-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+.leave-title{font-size:20px;font-weight:800;letter-spacing:-.025em;}
+.leave-sub{font-size:12px;color:var(--t3);margin-top:3px;}
+.leave-sum-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+.leave-sum-card{background:#fff;border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px;text-align:center;}
+.lsc-v{font-size:24px;font-weight:800;letter-spacing:-.03em;margin-bottom:3px;}
+.lsc-l{font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;}
+.leave-sum-card.pend{border-top:3px solid var(--amber);}
+.leave-sum-card.appr{border-top:3px solid var(--green);}
+.leave-sum-card.rejt{border-top:3px solid #a02020;}
+.leave-sum-card.totl{border-top:3px solid var(--blue);}
+.leave-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:28px;}
+.leave-sec-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);margin-bottom:10px;margin-top:20px;}
+.leave-card{background:#fff;border:1px solid var(--border);border-radius:var(--rl);padding:15px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.leave-card.pending{border-left:3px solid var(--amber);}
+.leave-card.approved{border-left:3px solid var(--green);}
+.leave-card.rejected{border-left:3px solid #a02020;}
+.leave-card-who{display:flex;align-items:center;gap:9px;min-width:150px;}
+.leave-card-name{font-weight:600;font-size:13px;color:var(--text);}
+.leave-card-role-lbl{font-size:11px;color:var(--t3);}
+.leave-card-detail{flex:1;min-width:180px;}
+.leave-type-pill{display:inline-flex;align-items:center;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;margin-bottom:4px;}
+.lt-full{background:#fde8d8;color:var(--accent);}
+.lt-half{background:#fdf4d4;color:var(--amber);}
+.lt-sick{background:#fdeaea;color:#a02020;}
+.lt-weekend{background:var(--purple-l);color:var(--purple);}
+.leave-dates{font-size:12px;color:var(--t2);font-family:'DM Mono',monospace;}
+.leave-reason{font-size:12px;color:var(--t3);margin-top:3px;font-style:italic;}
+.leave-status-pill{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap;}
+.ls-pending{background:#fdf4d4;color:var(--amber);}
+.ls-approved{background:var(--green-l);color:var(--green);}
+.ls-rejected{background:#fdeaea;color:#a02020;}
+.leave-actions{display:flex;gap:6px;flex-shrink:0;}
+.la-approve{padding:5px 12px;border:none;border-radius:var(--r);background:var(--green);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all .13s;}
+.la-approve:hover{background:#1f5e33;}
+.la-reject{padding:5px 12px;border:1px solid #e08080;border-radius:var(--r);background:#fdeaea;color:#a02020;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all .13s;}
+.la-reject:hover{background:#f8d0d0;}
+.leave-empty{text-align:center;padding:48px 20px;color:var(--t3);font-size:13px;}
+.leave-empty .big{font-size:32px;margin-bottom:8px;}
+.absent-notice{background:#fdf4d4;border:1px solid #e8c84a;border-radius:var(--r);padding:10px 16px;font-size:12px;color:#6a4a08;margin-bottom:16px;display:none;line-height:1.6;}
+.absent-notice.show{display:block;}
+</style>
+</head>
+<body>
+
+<!-- WELCOME -->
+<div class="screen" id="screen-welcome">
+  <div class="welcome-box">
+    <div class="welcome-head">
+      <div class="welcome-logo"><div class="welcome-dot"></div><span class="welcome-name">Kyrosity</span></div>
+      <div class="welcome-title">Welcome to Kyrosity</div>
+      <p class="welcome-desc">Your daily activity tracker for our Kyrosity family. Log your work, track your progress, and stay in sync.</p>
+    </div>
+    <div class="welcome-foot">
+      <button class="btn btn-p" onclick="goToApp()">Continue →</button>
+      <div class="welcome-admin-link">Admin? <a onclick="goToAdminPin()">Sign in with PIN</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- PIN -->
+<div class="screen hidden" id="screen-pin">
+  <div class="pin-box">
+    <div class="pin-head">
+      <div class="pin-head-logo"><div class="pin-head-dot"></div>Kyrosity</div>
+      <div class="pin-head-sub">Admin access</div>
+    </div>
+    <div class="pin-body">
+      <label>Enter Admin PIN</label>
+      <input type="password" id="pin-input" placeholder="••••" maxlength="6" onkeydown="if(event.key==='Enter')submitPin()">
+      <div class="pin-err" id="pin-err">Incorrect PIN. Try again.</div>
+    </div>
+    <div class="pin-foot">
+      <button class="btn btn-g" style="flex:1;justify-content:center;" onclick="backToWelcome()">← Back</button>
+      <button class="btn btn-p" style="flex:1;justify-content:center;" onclick="submitPin()">Sign In</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;">
+
+<div class="topbar">
+  <div class="brand"><div class="brand-dot"></div>Kyrosity<span class="brand-sub">Daily Tracker</span></div>
+  <div class="topbar-r">
+    <span id="hdr-date" style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;"></span>
+    <span class="role-pill" id="role-pill"></span>
+    <button class="btn btn-g btn-sm" id="btn-export" style="display:none;" onclick="exportCSV()">↓ Export CSV</button>
+    <button class="btn btn-g btn-sm" id="btn-add-member" style="display:none;" onclick="openAddMember()">+ Add Member</button>
+    <button class="btn btn-g btn-sm" id="btn-change-pin" style="display:none;" onclick="openChangePin()">🔒 Change PIN</button>
+    <button class="btn btn-g btn-sm" id="btn-leave" onclick="openLeaveRequest()" style="display:none;">🏖 Apply for Leave</button>
+    <button class="btn btn-p btn-sm" id="btn-log" onclick="openLog()">+ Submit My Log</button>
+    <button class="btn btn-g btn-sm" onclick="signOut()" style="font-size:11px;">Sign Out</button>
+  </div>
+</div>
+
+<!-- NAV TABS -->
+<div class="nav-tabs">
+  <button class="nav-tab active" id="tab-btn-dashboard" onclick="switchTab('dashboard')">📋 Dashboard</button>
+  <button class="nav-tab" id="tab-btn-leaves" onclick="switchTab('leaves')">🏖 Leave Requests <span class="leave-badge" id="leave-badge"></span></button>
+  <button class="nav-tab" id="tab-btn-attendance" style="display:none;" onclick="switchTab('attendance')">🗓 Attendance</button>
+  <button class="nav-tab" id="tab-btn-performance" style="display:none;" onclick="switchTab('performance')">📊 Monthly Report</button>
+</div>
+
+<div class="page">
+
+  <!-- ══ DASHBOARD TAB ══ -->
+  <div class="tab-view active" id="tab-dashboard">
+
+    <div class="date-row">
+      <div><div class="date-h" id="dh">Today</div><div class="date-s" id="ds"></div></div>
+      <div class="date-nav">
+        <button class="narr" onclick="shift(-1)">&#8592;</button>
+        <input type="date" id="dp" onchange="onPick()">
+        <button class="narr" onclick="shift(1)">&#8594;</button>
+      </div>
+    </div>
+
+    <!-- Reminder banner (shows at reminder time) -->
+    <div class="reminder-banner" id="reminder-banner">
+      <span class="reminder-txt">⏰ It's time to fill your daily log for today!</span>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="btn btn-p btn-sm" onclick="openLog();dismissReminder()">Fill Now</button>
+        <span class="reminder-dismiss" onclick="dismissReminder()">Dismiss</span>
+      </div>
+    </div>
+
+    <!-- Admin: reminder time setting -->
+    <div class="reminder-row" id="reminder-setting" style="display:none;">
+      <span style="font-size:14px;">⏰</span>
+      <label>Daily Log Reminder</label>
+      <input type="time" id="reminder-time" value="18:00" onchange="saveReminderTime()">
+      <span class="reminder-status" id="reminder-status">Reminder set for 6:00 PM</span>
+      <button class="btn btn-g btn-sm" onclick="testReminder()">Test</button>
+    </div>
+
+    <div class="sum-row">
+      <div class="sc co"><div class="sc-l">Active Today</div><div class="sc-v" id="s1">—</div><div class="sc-n" id="s1n">team members</div></div>
+      <div class="sc cg"><div class="sc-l">ACD Assets</div><div class="sc-v" id="s2">—</div><div class="sc-n">delivered today</div></div>
+      <div class="sc cb"><div class="sc-l">Videos Edited</div><div class="sc-v" id="s3">—</div><div class="sc-n">by editors today</div></div>
+      <div class="sc cp"><div class="sc-l">Revision Rounds</div><div class="sc-v" id="s4">—</div><div class="sc-n">total today</div></div>
+    </div>
+
+    <div class="team-section">
+      <div class="sec-h">
+        <div class="sec-label">
+          <span class="sec-tag acd">ACD</span>
+          <span class="sec-t">Associate Creative Directors</span>
+          <span class="sec-count" id="acd-count"></span>
+        </div>
+        <input class="search-inp" type="text" placeholder="Search…" oninput="filterCards('acd',this.value)">
+      </div>
+      <div class="cards-grid" id="acd-grid"></div>
+    </div>
+
+    <hr class="section-divider">
+
+    <div class="team-section">
+      <div class="sec-h">
+        <div class="sec-label">
+          <span class="sec-tag editor">Editor</span>
+          <span class="sec-t">Editors</span>
+          <span class="sec-count" id="editor-count"></span>
+        </div>
+        <input class="search-inp" type="text" placeholder="Search…" oninput="filterCards('editor',this.value)">
+      </div>
+      <div class="cards-grid" id="editor-grid"></div>
+    </div>
+
+    <div class="notes-sec" id="notes-sec" style="display:none;">
+      <hr class="section-divider" style="margin-bottom:20px;">
+      <div class="sec-h"><span class="sec-t">Notes & Blockers</span></div>
+      <div class="ng" id="ng"></div>
+    </div>
+
+  </div><!-- /tab-dashboard -->
+
+  <!-- ══ LEAVE REQUESTS TAB ══ -->
+  <div class="tab-view" id="tab-leaves">
+
+    <div class="leave-header">
+      <div>
+        <div class="leave-title">Leave Requests</div>
+        <div class="leave-sub" id="leave-sub-text">Submit and track leave requests. Admin approves or rejects.</div>
+      </div>
+      <button class="btn btn-p btn-sm" onclick="openLeaveRequest()">+ Apply for Leave</button>
+    </div>
+
+    <!-- Auto-absent notice -->
+    <div class="absent-notice" id="absent-notice">
+      ⚠️ <strong>Auto-Absent:</strong> Members who haven't clocked in or submitted a log by end of day are automatically marked Absent. You can override this in the Attendance tab.
+    </div>
+
+    <!-- Summary strip -->
+    <div class="leave-sum-row">
+      <div class="leave-sum-card pend"><div class="lsc-v" id="lv-pending">0</div><div class="lsc-l">Pending</div></div>
+      <div class="leave-sum-card appr"><div class="lsc-v" id="lv-approved">0</div><div class="lsc-l">Approved</div></div>
+      <div class="leave-sum-card rejt"><div class="lsc-v" id="lv-rejected">0</div><div class="lsc-l">Rejected</div></div>
+      <div class="leave-sum-card totl"><div class="lsc-v" id="lv-total">0</div><div class="lsc-l">Total Requests</div></div>
+    </div>
+
+    <!-- Pending requests (admin sees all; candidate sees own) -->
+    <div id="leave-pending-section">
+      <div class="leave-sec-title">⏳ Pending Approval</div>
+      <div class="leave-grid" id="leave-pending-list"></div>
+    </div>
+
+    <div id="leave-history-section">
+      <div class="leave-sec-title">📋 Request History</div>
+      <div class="leave-grid" id="leave-history-list"></div>
+    </div>
+
+  </div><!-- /tab-leaves -->
+
+  <!-- ══ ATTENDANCE TAB ══ -->
+  <div class="tab-view" id="tab-attendance">
+
+    <div class="att-header">
+      <div>
+        <div class="att-title">Attendance</div>
+        <div class="att-sub">Individual attendance analysis — working days, leaves, and presence rate per member.</div>
+      </div>
+      <div class="att-controls">
+        <select class="att-select" id="att-month" onchange="renderAttendance()"></select>
+        <button class="btn btn-g btn-sm" onclick="exportAttCSV()">↓ Export CSV</button>
+      </div>
+    </div>
+
+    <!-- Team summary strip -->
+    <div class="att-sum">
+      <div class="att-sc p"><div class="att-sc-v" id="att-s-present">—</div><div class="att-sc-l">Total Present</div></div>
+      <div class="att-sc a"><div class="att-sc-v" id="att-s-absent">—</div><div class="att-sc-l">Total Absent</div></div>
+      <div class="att-sc h"><div class="att-sc-v" id="att-s-half">—</div><div class="att-sc-l">Half Day</div></div>
+      <div class="att-sc l"><div class="att-sc-v" id="att-s-leave">—</div><div class="att-sc-l">On Leave</div></div>
+    </div>
+
+    <!-- Today's quick table -->
+    <div class="att-table-wrap" style="margin-bottom:28px;">
+      <div class="att-table-head">
+        <div class="att-table-title">Today's Attendance</div>
+        <span style="font-size:11px;color:var(--t3);">Auto-marked on clock-in or log submit · Admin can override</span>
+      </div>
+      <table class="att-table">
+        <thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Clock In</th><th>Clock Out</th><th>Total Time</th><th>Override</th></tr></thead>
+        <tbody id="att-today-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Individual member cards heading -->
+    <div class="sec-h" style="margin-bottom:16px;">
+      <div class="sec-t">Individual Attendance — Monthly Breakdown</div>
+    </div>
+
+    <!-- Per-member attendance cards grid -->
+    <div id="att-member-cards"></div>
+
+  </div><!-- /tab-attendance -->
+
+  <!-- ══ PERFORMANCE TAB ══ -->
+  <div class="tab-view" id="tab-performance">
+
+    <div class="perf-header">
+      <div>
+        <div class="perf-title">Performance Reports</div>
+        <div class="perf-sub">Monthly individual analysis — heatmap, completion, and output totals</div>
+      </div>
+      <div class="perf-controls">
+        <select class="perf-select" id="perf-month" onchange="renderPerf()"></select>
+      </div>
+    </div>
+
+    <!-- Member picker (Admin sees all; Candidate sees only themselves) -->
+    <div class="member-picker" id="member-picker"></div>
+
+    <!-- Report panel -->
+    <div class="report-panel" id="report-panel" style="display:none;">
+
+      <div class="report-head">
+        <div class="report-av" id="rp-av"></div>
+        <div>
+          <div class="report-name" id="rp-name"></div>
+          <div class="report-meta" id="rp-meta"></div>
+        </div>
+        <div class="report-month" id="rp-month"></div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-row" id="rp-kpis"></div>
+
+      <!-- Charts -->
+      <div class="charts-grid">
+        <!-- Heatmap -->
+        <div class="chart-block">
+          <div class="chart-title">Activity Heatmap — logged days</div>
+          <div class="heatmap-wrap"><div class="heatmap" id="rp-heatmap"></div></div>
+          <div class="hm-legend">
+            <div class="hm-leg-item"><div class="hm-leg-dot" style="background:var(--green)"></div>Active</div>
+            <div class="hm-leg-item"><div class="hm-leg-dot" style="background:#a8d4b8"></div>Logged</div>
+            <div class="hm-leg-item"><div class="hm-leg-dot" style="background:var(--amber)"></div>On a Break</div>
+            <div class="hm-leg-item"><div class="hm-leg-dot" style="background:#c8c8c2"></div>Inactive</div>
+            <div class="hm-leg-item"><div class="hm-leg-dot" style="background:#edede8"></div>No entry</div>
+          </div>
+        </div>
+
+        <!-- Completion trend -->
+        <div class="chart-block">
+          <div class="chart-title">Completion Rate — per logged day</div>
+          <div class="completion-chart" id="rp-completion"></div>
+        </div>
+
+        <!-- Asset / output breakdown -->
+        <div class="chart-block full">
+          <div class="chart-title" id="rp-asset-title">Output by Project</div>
+          <div class="asset-list" id="rp-assets"></div>
+        </div>
+      </div>
+
+      <!-- Day-by-day log table -->
+      <div class="day-log">
+        <div class="day-log-head">
+          <div class="day-log-title">Day-by-Day Log</div>
+        </div>
+        <table class="day-table">
+          <thead id="rp-table-head"></thead>
+          <tbody id="rp-table-body"></tbody>
+        </table>
+      </div>
+
+    </div><!-- /report-panel -->
+
+  </div><!-- /tab-performance -->
+
+</div><!-- /page -->
+<!-- LEAVE REQUEST MODAL -->
+<div class="bd" id="leave-modal">
+  <div class="modal sm">
+    <div class="mh"><div class="mt">Apply for Leave</div><button class="mx" onclick="closeLeaveRequest()">×</button></div>
+    <div class="mb">
+      <div class="fg2">
+        <div class="fg full" id="leave-member-wrap"><label>Your Name</label><select id="lv-member"></select></div>
+        <div class="fg full">
+          <label>Leave Type</label>
+          <select id="lv-type">
+            <option value="full">Full Day Leave</option>
+            <option value="half">Half Day Leave</option>
+            <option value="sick">Emergency / Sick Leave</option>
+            <option value="weekend">Weekend Working</option>
+          </select>
+        </div>
+        <div class="fg"><label>From Date</label><input type="date" id="lv-from"></div>
+        <div class="fg"><label>To Date</label><input type="date" id="lv-to"></div>
+        <div class="fg full"><label>Reason</label><textarea id="lv-reason" placeholder="Brief reason for leave…" style="min-height:72px;"></textarea></div>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-g" onclick="closeLeaveRequest()">Cancel</button>
+      <button class="btn btn-p" onclick="submitLeaveRequest()">Submit Request</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHANGE PIN MODAL (Admin only) -->
+<div class="bd" id="change-pin-modal">
+  <div class="modal sm">
+    <div class="mh"><div class="mt">Change Admin PIN</div><button class="mx" onclick="closeChangePin()">×</button></div>
+    <div class="mb">
+      <div class="fg2">
+        <div class="fg full"><label>Current PIN</label><input type="password" id="cp-current" placeholder="Enter current PIN" maxlength="6" style="letter-spacing:.2em;font-family:'DM Mono',monospace;font-size:15px;"></div>
+        <div class="fg full"><label>New PIN</label><input type="password" id="cp-new" placeholder="Enter new PIN" maxlength="6" style="letter-spacing:.2em;font-family:'DM Mono',monospace;font-size:15px;"></div>
+        <div class="fg full"><label>Confirm New PIN</label><input type="password" id="cp-confirm" placeholder="Re-enter new PIN" maxlength="6" style="letter-spacing:.2em;font-family:'DM Mono',monospace;font-size:15px;"></div>
+        <div class="fg full"><div id="cp-err" style="font-size:12px;color:#a02020;display:none;padding:6px 0;"></div></div>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-g" onclick="closeChangePin()">Cancel</button>
+      <button class="btn btn-p" onclick="saveNewPin()">Update PIN</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<!-- LOG MODAL -->
+<div class="bd" id="log-modal">
+  <div class="modal">
+    <div class="mh"><div class="mt" id="lm-title">Submit My Daily Log</div><button class="mx" onclick="closeLog()">×</button></div>
+    <div class="mb">
+      <div class="fg2">
+        <div class="form-note">📋 Fill in your activity for today. Once submitted, only an Admin can edit the numbers.</div>
+        <div class="fg"><label>Your Name</label><select id="lf-member"></select></div>
+        <div class="fg"><label>Date</label><input type="date" id="lf-date" readonly></div>
+        <div class="fg"><label>Project / Campaign</label><input type="text" id="lf-proj" placeholder="e.g. Brand Refresh Q2"></div>
+        <div id="acd-fields" style="display:contents;">
+          <div class="fg"><label>AI Tool Used</label>
+            <select id="lf-tool"><option>Midjourney</option><option>DALL-E 3</option><option>Stable Diffusion</option><option>Adobe Firefly</option><option>Runway</option><option>Sora</option><option>Kling</option><option>Leonardo AI</option><option>Ideogram</option><option>Other</option></select>
+          </div>
+          <div class="fdiv">Today's Numbers</div>
+          <div class="fg"><label>Tasks Completed</label><input type="number" id="lf-td" min="0" placeholder="0"></div>
+          <div class="fg"><label>Total Tasks</label><input type="number" id="lf-tt" min="0" placeholder="0"></div>
+          <div class="fg"><label>Assets Delivered</label><input type="number" id="lf-as" min="0" placeholder="0"></div>
+          <div class="fg"><label>AI Prompts Run</label><input type="number" id="lf-pr" min="0" placeholder="0"></div>
+          <div class="fg"><label>Hours Worked</label><input type="number" id="lf-hr" min="0" max="24" step="0.5" placeholder="8"></div>
+          <div class="fg"><label>Quality Score (1–10)</label><input type="number" id="lf-ql" min="1" max="10" placeholder="8"></div>
+        </div>
+        <div id="editor-fields" style="display:none;">
+          <div class="fdiv" style="grid-column:1/-1;border-top:1px solid var(--border);padding-top:11px;margin-top:1px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);">Today's Numbers</div>
+          <div class="fg"><label>Videos Edited / Cut</label><input type="number" id="lf-vids" min="0" placeholder="0"></div>
+          <div class="fg"><label>Revision Rounds</label><input type="number" id="lf-revs" min="0" placeholder="0"></div>
+        </div>
+        <div class="fdiv">Notes & Blockers</div>
+        <div class="fg"><label>Blocker (if any)</label>
+          <select id="lf-bl"><option value="">None</option><option>Technical Issue</option><option>Waiting on Feedback</option><option>Brief Unclear</option><option>Tool Access</option><option>Other</option></select>
+        </div>
+        <div class="fg full"><label>Notes</label><textarea id="lf-notes" placeholder="Progress, blockers, anything to flag…"></textarea></div>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-g" onclick="closeLog()">Cancel</button>
+      <button class="btn btn-p" onclick="saveLog()">Submit Log</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN ACD MODAL -->
+<div class="bd" id="admin-acd-modal">
+  <div class="modal">
+    <div class="mh"><div class="mt" id="aa-title">Edit ACD Entry</div><button class="mx" onclick="closeAdminAcd()">×</button></div>
+    <div class="mb"><div class="fg2">
+      <div class="fg"><label>Artist</label><select id="aa-member"></select></div>
+      <div class="fg"><label>Date</label><input type="date" id="aa-date"></div>
+      <div class="fg"><label>Project</label><input type="text" id="aa-proj"></div>
+      <div class="fg"><label>AI Tool</label><select id="aa-tool"><option>Midjourney</option><option>DALL-E 3</option><option>Stable Diffusion</option><option>Adobe Firefly</option><option>Runway</option><option>Sora</option><option>Kling</option><option>Leonardo AI</option><option>Ideogram</option><option>Other</option></select></div>
+      <div class="fdiv">Numbers</div>
+      <div class="fg"><label>Tasks Done</label><input type="number" id="aa-td" min="0"></div>
+      <div class="fg"><label>Total Tasks</label><input type="number" id="aa-tt" min="0"></div>
+      <div class="fg"><label>Assets</label><input type="number" id="aa-as" min="0"></div>
+      <div class="fg"><label>Prompts</label><input type="number" id="aa-pr" min="0"></div>
+      <div class="fg"><label>Hours</label><input type="number" id="aa-hr" min="0" max="24" step="0.5"></div>
+      <div class="fg"><label>Quality (1–10)</label><input type="number" id="aa-ql" min="1" max="10"></div>
+      <div class="fdiv">Notes</div>
+      <div class="fg"><label>Blocker</label><select id="aa-bl"><option value="">None</option><option>Technical Issue</option><option>Waiting on Feedback</option><option>Brief Unclear</option><option>Tool Access</option><option>Other</option></select></div>
+      <div class="fg"><label>Priority</label><select id="aa-prio"><option>Normal</option><option>High</option><option>Urgent</option><option>Low</option></select></div>
+      <div class="fg full"><label>Notes</label><textarea id="aa-notes"></textarea></div>
+    </div></div>
+    <div class="mf"><button class="btn btn-g" onclick="closeAdminAcd()">Cancel</button><button class="btn btn-p" onclick="saveAdminAcd()">Save Changes</button></div>
+  </div>
+</div>
+
+<!-- ADMIN EDITOR MODAL -->
+<div class="bd" id="admin-editor-modal">
+  <div class="modal">
+    <div class="mh"><div class="mt" id="ae-title">Edit Editor Entry</div><button class="mx" onclick="closeAdminEditor()">×</button></div>
+    <div class="mb"><div class="fg2">
+      <div class="fg"><label>Editor</label><select id="ae-member"></select></div>
+      <div class="fg"><label>Date</label><input type="date" id="ae-date"></div>
+      <div class="fg full"><label>Project</label><input type="text" id="ae-proj"></div>
+      <div class="fdiv">Numbers</div>
+      <div class="fg"><label>Videos Edited</label><input type="number" id="ae-vids" min="0"></div>
+      <div class="fg"><label>Revision Rounds</label><input type="number" id="ae-revs" min="0"></div>
+      <div class="fdiv">Notes</div>
+      <div class="fg"><label>Blocker</label><select id="ae-bl"><option value="">None</option><option>Technical Issue</option><option>Waiting on Feedback</option><option>Brief Unclear</option><option>Tool Access</option><option>Other</option></select></div>
+      <div class="fg"><label>Priority</label><select id="ae-prio"><option>Normal</option><option>High</option><option>Urgent</option><option>Low</option></select></div>
+      <div class="fg full"><label>Notes</label><textarea id="ae-notes"></textarea></div>
+    </div></div>
+    <div class="mf"><button class="btn btn-g" onclick="closeAdminEditor()">Cancel</button><button class="btn btn-p" onclick="saveAdminEditor()">Save Changes</button></div>
+  </div>
+</div>
+
+<!-- ADD MEMBER MODAL -->
+<div class="bd" id="member-modal">
+  <div class="modal sm">
+    <div class="mh"><div class="mt">Add Team Member</div><button class="mx" onclick="closeMember()">×</button></div>
+    <div class="mb"><div class="fg2">
+      <div class="fg full"><label>Role</label>
+        <div class="role-toggle">
+          <button class="rt-btn on acd" id="rt-acd" onclick="selectMemberRole('acd')">🎨 ACD</button>
+          <button class="rt-btn editor" id="rt-editor" onclick="selectMemberRole('editor')">🎬 Editor</button>
+        </div>
+      </div>
+      <div class="fg full"><label>Full Name</label><input type="text" id="m-name" placeholder="e.g. Riya Kapoor"></div>
+      <div class="fg full"><label>Speciality / Title</label><input type="text" id="m-spec" placeholder="e.g. Motion Designer"></div>
+      <div class="fg full"><label>Avatar Colour</label><div class="swatches" id="swatches"></div></div>
+    </div></div>
+    <div class="mf"><button class="btn btn-g" onclick="closeMember()">Cancel</button><button class="btn btn-p" onclick="saveMember()">Add Member</button></div>
+  </div>
+</div>
+
+<div id="fb-loader" style="display:none;position:fixed;inset:0;background:rgba(247,247,245,.85);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:12px;">
+  <div style="width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;"></div>
+  <div style="font-size:13px;color:var(--t2);font-weight:500;">Loading team data…</div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── FIREBASE CONFIG ──
+const FB_URL='https://kyrosity-tracker-default-rtdb.asia-southeast1.firebasedatabase.app';
+
+// Firebase helpers — read and write using REST API
+async function fbGet(path){
+  try{
+    const r=await fetch(`${FB_URL}/${path}.json`);
+    const d=await r.json();
+    return d||null;
+  }catch(e){console.error('fbGet error',e);return null;}
+}
+async function fbSet(path,data){
+  try{
+    await fetch(`${FB_URL}/${path}.json`,{method:'PUT',body:JSON.stringify(data)});
+  }catch(e){console.error('fbSet error',e);}
+}
+async function fbPatch(path,data){
+  try{
+    await fetch(`${FB_URL}/${path}.json`,{method:'PATCH',body:JSON.stringify(data)});
+  }catch(e){console.error('fbPatch error',e);}
+}
+async function fbDelete(path){
+  try{
+    await fetch(`${FB_URL}/${path}.json`,{method:'DELETE'});
+  }catch(e){console.error('fbDelete error',e);}
+}
+
+// ── Admin PIN — stored in Firebase ──
+async function getAdminPin(){
+  const pin=await fbGet('config/admin_pin');
+  return pin||'1234';
+}
+async function setAdminPin(pin){
+  await fbSet('config/admin_pin',pin);
+}
+
+// Wipe old localStorage
+['ky3_members','ky3_entries','ky3_clocks','ky3_leaves','ky3_att'].forEach(k=>localStorage.removeItem(k));
+
+const COLORS=[
+  {bg:'#fde8d8',tx:'#8a3010'},{bg:'#dceef8',tx:'#0f3a6a'},{bg:'#d8f0e4',tx:'#0f5030'},
+  {bg:'#f8dcea',tx:'#7a1050'},{bg:'#e8e0f8',tx:'#3a108a'},{bg:'#fdf4d4',tx:'#6a4a08'},
+  {bg:'#d8f8f0',tx:'#084a38'},{bg:'#f0f0f0',tx:'#303030'},
+];
+const STATUS_META={
+  active:  {l:'Active',    dot:'#2a7a45',cls:'s-active'},
+  inactive:{l:'Inactive',  dot:'#888',   cls:'s-inactive'},
+  break:   {l:'On a Break',dot:'#b07010',cls:'s-break'},
+};
+
+let currentRole='',selColor=0,newMemberRole='acd',fqAcd='',fqEditor='';
+let selectedPerfMid=null;
+let MEMBERS=[], entries=[], clockData={}, leaveRequests=[], attData={};
+let curDate=new Date();
+
+function fd(d){return d.toISOString().split('T')[0];}
+function today(){return fd(new Date());}
+function ini(n){return n.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
+function nid(a){return a.length?Math.max(...a.map(x=>x.id))+1:1;}
+
+// ── Firebase save functions ──
+async function saveMembers(){await fbSet('members',MEMBERS);}
+async function saveEntries(){await fbSet('entries',entries);}
+async function saveClock(){await fbSet('clocks',clockData);}
+async function saveLeaves(){await fbSet('leaves',leaveRequests);}
+async function saveAtt(){await fbSet('attendance',attData);}
+function save(){saveMembers();saveEntries();}
+
+// ── Load all data from Firebase ──
+async function loadAllData(){
+  showLoader(true);
+  const [m,e,c,l,a]=await Promise.all([
+    fbGet('members'),
+    fbGet('entries'),
+    fbGet('clocks'),
+    fbGet('leaves'),
+    fbGet('attendance'),
+  ]);
+  MEMBERS=m||[];
+  entries=e||[];
+  clockData=c||{};
+  leaveRequests=l||[];
+  attData=a||{};
+  // Convert Firebase arrays (objects with numeric keys) to arrays if needed
+  if(!Array.isArray(MEMBERS)) MEMBERS=Object.values(MEMBERS);
+  if(!Array.isArray(entries)) entries=Object.values(entries);
+  if(!Array.isArray(leaveRequests)) leaveRequests=Object.values(leaveRequests);
+  showLoader(false);
+}
+
+function showLoader(show){
+  const el=document.getElementById('fb-loader');
+  if(el) el.style.display=show?'flex':'none';
+}
+
+// ── SCREENS ──
+async function goToApp(){
+  currentRole='candidate';
+  document.getElementById('screen-welcome').classList.add('hidden');
+  document.getElementById('app').style.display='block';
+  applyRole();updHeader();
+  await loadAllData();
+  render();renderPerfTab();
+  initReminder();restoreTimers();
+  updateLeaveBadge();renderLeaves();
+  runAutoAbsent();
+  setInterval(runAutoAbsent,60000);
+  // Poll for updates every 15 seconds
+  setInterval(async()=>{await loadAllData();render();renderLeaves();updateLeaveBadge();},15000);
+}
+function goToAdminPin(){document.getElementById('screen-welcome').classList.add('hidden');document.getElementById('screen-pin').classList.remove('hidden');setTimeout(()=>document.getElementById('pin-input').focus(),100);}
+function backToWelcome(){document.getElementById('pin-input').value='';document.getElementById('pin-err').style.display='none';document.getElementById('screen-pin').classList.add('hidden');document.getElementById('screen-welcome').classList.remove('hidden');}
+async function submitPin(){
+  const enteredPin=document.getElementById('pin-input').value;
+  const correctPin=await getAdminPin();
+  if(enteredPin!==correctPin){document.getElementById('pin-err').style.display='block';document.getElementById('pin-input').value='';return;}
+  currentRole='admin';
+  document.getElementById('screen-pin').classList.add('hidden');
+  document.getElementById('app').style.display='block';
+  applyRole();updHeader();
+  await loadAllData();
+  render();renderPerfTab();
+  initReminder();restoreTimers();
+  updateLeaveBadge();renderLeaves();
+  runAutoAbsent();
+  setInterval(runAutoAbsent,60000);
+  setInterval(async()=>{await loadAllData();render();renderLeaves();updateLeaveBadge();},15000);
+}
+function signOut(){document.getElementById('app').style.display='none';document.getElementById('pin-input').value='';document.getElementById('pin-err').style.display='none';document.getElementById('screen-pin').classList.add('hidden');document.getElementById('screen-welcome').classList.remove('hidden');currentRole='';}
+function applyRole(){
+  const isAdmin=currentRole==='admin';
+  const pill=document.getElementById('role-pill');
+  pill.textContent=isAdmin?'🔑 Admin':'Team';
+  pill.className='role-pill '+(isAdmin?'admin':'candidate');
+  document.getElementById('btn-export').style.display=isAdmin?'':'none';
+  document.getElementById('btn-add-member').style.display=isAdmin?'':'none';
+  document.getElementById('btn-change-pin').style.display=isAdmin?'':'none';
+  document.getElementById('btn-leave').style.display=isAdmin?'none':'';
+  document.getElementById('btn-log').textContent=isAdmin?'+ Log Entry':'+ Submit My Log';
+  document.getElementById('tab-btn-performance').style.display=isAdmin?'':'none';
+  document.getElementById('tab-btn-attendance').style.display=isAdmin?'':'none';
+  document.getElementById('reminder-setting').style.display=isAdmin?'flex':'none';
+  document.getElementById('absent-notice').style.display=isAdmin?'block':'none';
+  // Always land on dashboard when role is applied
+  document.querySelectorAll('.tab-view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-dashboard').classList.add('active');
+  document.getElementById('tab-btn-dashboard').classList.add('active');
+}
+
+// ── TABS ──
+function switchTab(t){
+  if((t==='performance'||t==='attendance')&&currentRole!=='admin'){showT('Admin access only.');return;}
+  document.querySelectorAll('.tab-view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  const btn=document.getElementById('tab-btn-'+t);
+  if(btn) btn.classList.add('active');
+  if(t==='performance') renderPerfTab();
+  if(t==='attendance') renderAttendance();
+  if(t==='leaves') renderLeaves();
+}
+
+// ── DATE ──
+function updHeader(){
+  document.getElementById('hdr-date').textContent=new Date().toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'}).toUpperCase();
+  const sel=fd(curDate),isT=sel===today();
+  document.getElementById('dh').textContent=isT?'Today':curDate.toLocaleDateString('en-IN',{weekday:'long'});
+  document.getElementById('ds').textContent=curDate.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}).toUpperCase();
+  document.getElementById('dp').value=sel;
+}
+function shift(d){curDate=new Date(curDate);curDate.setDate(curDate.getDate()+d);updHeader();render();}
+function onPick(){const v=document.getElementById('dp').value;if(v){curDate=new Date(v+'T12:00:00');updHeader();render();}}
+
+// ── SUMMARY ──
+function renderSum(){
+  const sel=fd(curDate),t=entries.filter(e=>e.date===sel);
+  const act=t.filter(e=>e.status==='active').length;
+  const as=t.filter(e=>{const m=MEMBERS.find(x=>x.id===e.mid);return m&&m.role==='acd';}).reduce((s,e)=>s+(+e.assets||0),0);
+  const vids=t.reduce((s,e)=>s+(+e.vids||0),0);
+  const revs=t.reduce((s,e)=>s+(+e.revs||0),0);
+  document.getElementById('s1').textContent=act||'—';
+  document.getElementById('s2').textContent=as||'—';
+  document.getElementById('s3').textContent=vids||'—';
+  document.getElementById('s4').textContent=revs||'—';
+}
+
+// ── STATUS ──
+function statusWidget(mid){
+  const e=entries.find(x=>x.date===fd(curDate)&&x.mid===mid)||{};
+  const st=e.status||'',m=STATUS_META[st];
+  const opts=Object.entries(STATUS_META).map(([k,v])=>`<div class="smopt" onclick="setStatus(${mid},'${k}',event)"><div class="smopt-dot" style="background:${v.dot}"></div>${v.l}</div>`).join('')+(st?`<div class="smopt" onclick="setStatus(${mid},'',event)" style="color:var(--t3)"><div class="smopt-dot" style="background:#ddd"></div>Clear</div>`:'');
+  return `<div class="status-corner"><button class="sbadge ${m?m.cls:''}" onclick="toggleMenu(${mid},event)"><span class="sdot" style="${m?'':'background:#ccc'}"></span>${m?m.l:'Set Status'} ▾</button><div class="smenu" id="smenu-${mid}">${opts}</div></div>`;
+}
+function toggleMenu(mid,ev){ev.stopPropagation();const menu=document.getElementById('smenu-'+mid);const was=menu.classList.contains('open');closeAllMenus();if(!was)menu.classList.add('open');}
+function closeAllMenus(){document.querySelectorAll('.smenu.open').forEach(m=>m.classList.remove('open'));}
+document.addEventListener('click',closeAllMenus);
+async function setStatus(mid,status,ev){
+  if(ev)ev.stopPropagation();
+  const sel=fd(curDate);
+  const idx=entries.findIndex(x=>x.mid===mid&&x.date===sel);
+  if(idx>-1)entries[idx].status=status;
+  else if(status)entries.push({mid,date:sel,status,proj:'',tool:'',td:0,tt:0,assets:0,prompts:0,hours:0,quality:0,vids:0,revs:0,blocker:'',priority:'Normal',notes:''});
+  save();render();
+}
+
+// ── CARDS ──
+function getE(mid){return entries.find(x=>x.date===fd(curDate)&&x.mid===mid)||{};}
+function acdCard(m,isAdmin){
+  const c=COLORS[m.ci%COLORS.length],e=getE(m.id);
+  const pct=e.tt>0?Math.round((e.td/e.tt)*100):null,bc=pct>=80?'g':'';
+  return`<div class="acard acd-card">
+    <div class="acard-top"><div class="av" style="background:${c.bg};color:${c.tx}">${ini(m.name)}</div><div><div class="aname">${m.name}</div><div class="aspec">${m.spec}</div></div>${statusWidget(m.id)}</div>
+    <div class="acard-body">
+      <div class="metric"><div class="metric-l">Total Assets</div><div class="metric-v${e.assets?'':' em'}">${e.assets||'—'}</div></div>
+      <div class="metric"><div class="metric-l">Assets Done</div><div class="metric-v${e.prompts?'':' em'}">${e.prompts||'—'}</div></div>
+      <div class="metric"><div class="metric-l">Hours</div><div class="metric-v${e.hours?'':' em'}">${e.hours?e.hours+'h':'—'}</div></div>
+    </div>
+    <div class="acard-prog"><span class="prog-lbl">Tasks</span><div class="pb"><div class="pf ${bc}" style="width:${pct||0}%"></div></div><span class="prog-pct">${pct!==null?`${e.td}/${e.tt} (${pct}%)`:'Not logged'}</span></div>
+    ${clockBar(m.id)}
+    <div class="acard-foot">${e.proj?`<span class="proj-txt">📁 ${e.proj}</span>`:`<span class="proj-none">No project logged</span>`}${isAdmin?`<button class="ab" onclick="openAdminAcd(${m.id})">Edit</button>`:`<span class="lock-lbl">🔒 Admin only</span>`}</div>
+  </div>`;
+}
+function editorCard(m,isAdmin){
+  const c=COLORS[m.ci%COLORS.length],e=getE(m.id);
+  return`<div class="acard editor-card">
+    <div class="acard-top"><div class="av" style="background:${c.bg};color:${c.tx}">${ini(m.name)}</div><div><div class="aname">${m.name}</div><div class="aspec">${m.spec}</div></div>${statusWidget(m.id)}</div>
+    <div class="acard-body two">
+      <div class="metric"><div class="metric-l">Videos Edited</div><div class="metric-v${e.vids?'':' em'}">${e.vids||'—'}</div></div>
+      <div class="metric"><div class="metric-l">Revisions</div><div class="metric-v${e.revs?'':' em'}">${e.revs||'—'}</div></div>
+    </div>
+    ${clockBar(m.id)}
+    <div class="acard-foot">${e.proj?`<span class="proj-txt">📁 ${e.proj}</span>`:`<span class="proj-none">No project logged</span>`}${isAdmin?`<button class="ab" onclick="openAdminEditor(${m.id})">Edit</button>`:`<span class="lock-lbl">🔒 Admin only</span>`}</div>
+  </div>`;
+}
+function renderCards(){
+  const isAdmin=currentRole==='admin';
+  const acds=MEMBERS.filter(m=>m.role==='acd'&&(!fqAcd||m.name.toLowerCase().includes(fqAcd)));
+  const eds=MEMBERS.filter(m=>m.role==='editor'&&(!fqEditor||m.name.toLowerCase().includes(fqEditor)));
+  document.getElementById('acd-count').textContent=`(${MEMBERS.filter(m=>m.role==='acd').length})`;
+  document.getElementById('editor-count').textContent=`(${MEMBERS.filter(m=>m.role==='editor').length})`;
+  document.getElementById('acd-grid').innerHTML=acds.length?acds.map(m=>acdCard(m,isAdmin)).join(''):`<div class="empty-state"><div class="big">🎨</div><p>${isAdmin?'No ACDs yet.':'No ACDs added yet.'}</p></div>`;
+  document.getElementById('editor-grid').innerHTML=eds.length?eds.map(m=>editorCard(m,isAdmin)).join(''):`<div class="empty-state"><div class="big">🎬</div><p>${isAdmin?'No Editors yet.':'No Editors added yet.'}</p></div>`;
+}
+function renderNotes(){
+  const sel=fd(curDate),nd=entries.filter(e=>e.date===sel&&e.notes);
+  const sec=document.getElementById('notes-sec');
+  if(!nd.length){sec.style.display='none';return;}
+  sec.style.display='block';
+  document.getElementById('ng').innerHTML=nd.map(e=>{
+    const m=MEMBERS.find(x=>x.id===e.mid)||{name:'?',ci:0,role:'acd'};
+    const c=COLORS[(m.ci||0)%COLORS.length],isEd=m.role==='editor';
+    return`<div class="nc"><div class="nc-who"><div class="av" style="width:22px;height:22px;font-size:9px;background:${c.bg};color:${c.tx}">${ini(m.name)}</div>${m.name}<span class="sec-tag ${isEd?'editor':'acd'}" style="font-size:10px;padding:2px 7px;">${isEd?'Editor':'ACD'}</span>${e.blocker?`<span class="tag ${isEd?'et':''}">${e.blocker}</span>`:''}</div><div class="nc-txt">${e.notes}</div></div>`;
+  }).join('');
+}
+function render(){renderSum();renderCards();renderNotes();}
+function filterCards(type,q){if(type==='acd')fqAcd=q.toLowerCase();else fqEditor=q.toLowerCase();renderCards();}
+
+// ══════════════════════════════════
+// PERFORMANCE TAB
+// ══════════════════════════════════
+function renderPerfTab(){
+  // Populate month selector — current month + last 5
+  const sel=document.getElementById('perf-month');
+  const now=new Date();
+  sel.innerHTML='';
+  for(let i=0;i<6;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const val=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const label=d.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+    sel.innerHTML+=`<option value="${val}"${i===0?' selected':''}>${label}</option>`;
+  }
+  renderMemberPicker();
+}
+
+function renderMemberPicker(){
+  const picker=document.getElementById('member-picker');
+  const isAdmin=currentRole==='admin';
+  const list=isAdmin?MEMBERS:MEMBERS; // candidate sees all but can only click own — handled in click
+  picker.innerHTML=list.map(m=>{
+    const c=COLORS[m.ci%COLORS.length];
+    const isSel=selectedPerfMid===m.id;
+    const isEd=m.role==='editor';
+    return`<div class="mp-card${isSel?' selected '+(isEd?'editor':'acd'):''}" onclick="selectMember(${m.id})">
+      <div class="av" style="width:34px;height:34px;font-size:12px;background:${c.bg};color:${c.tx};flex-shrink:0;">${ini(m.name)}</div>
+      <div><div class="mp-card-name">${m.name}</div><div class="mp-card-role">${m.spec} · ${isEd?'Editor':'ACD'}</div></div>
+    </div>`;
+  }).join('');
+  if(!list.length) picker.innerHTML=`<p style="font-size:13px;color:var(--t3);">No team members added yet.</p>`;
+}
+
+function selectMember(mid){
+  selectedPerfMid=mid;
+  renderMemberPicker();
+  renderReport(mid);
+}
+
+function renderReport(mid){
+  const m=MEMBERS.find(x=>x.id===mid);
+  if(!m)return;
+  const panel=document.getElementById('report-panel');
+  panel.style.display='block';
+
+  const monthVal=document.getElementById('perf-month').value;
+  const [yr,mo]=monthVal.split('-').map(Number);
+  const daysInMonth=new Date(yr,mo,0).getDate();
+  const now=new Date(),isCurrentMonth=(now.getFullYear()===yr&&now.getMonth()+1===mo);
+  const lastDay=isCurrentMonth?now.getDate():daysInMonth;
+
+  // Get all entries for this member this month
+  const prefix=`${yr}-${String(mo).padStart(2,'0')}`;
+  const mEntries=entries.filter(e=>e.mid===mid&&e.date.startsWith(prefix));
+
+  // ── HEAD ──
+  const c=COLORS[m.ci%COLORS.length];
+  const av=document.getElementById('rp-av');
+  av.textContent=ini(m.name);
+  av.style.background=c.bg; av.style.color=c.tx;
+  av.style.width='44px'; av.style.height='44px'; av.style.fontSize='15px';
+  document.getElementById('rp-name').textContent=m.name;
+  document.getElementById('rp-meta').textContent=`${m.spec} · ${m.role==='editor'?'Editor':'Associate Creative Director'}`;
+  document.getElementById('rp-month').textContent=new Date(yr,mo-1,1).toLocaleDateString('en-IN',{month:'long',year:'numeric'}).toUpperCase();
+
+  // ── KPIs ──
+  const activeDays=mEntries.filter(e=>e.status==='active').length;
+  const loggedDays=mEntries.length;
+  const isEd=m.role==='editor';
+  const totalOutput=isEd?mEntries.reduce((s,e)=>s+(+e.vids||0),0):mEntries.reduce((s,e)=>s+(+e.assets||0),0);
+  const totalRevs=isEd?mEntries.reduce((s,e)=>s+(+e.revs||0),0):0;
+  const compRates=mEntries.filter(e=>e.tt>0).map(e=>Math.round((e.td/e.tt)*100));
+  const avgComp=compRates.length?Math.round(compRates.reduce((a,b)=>a+b,0)/compRates.length):null;
+
+  document.getElementById('rp-kpis').innerHTML=`
+    <div class="kpi"><div class="kpi-l">Days Logged</div><div class="kpi-v accent">${loggedDays}</div><div class="kpi-n">of ${lastDay} working days</div></div>
+    <div class="kpi"><div class="kpi-l">Active Days</div><div class="kpi-v green">${activeDays}</div><div class="kpi-n">${loggedDays?Math.round(activeDays/loggedDays*100):0}% of logged days</div></div>
+    <div class="kpi"><div class="kpi-l">${isEd?'Videos Edited':'Assets Delivered'}</div><div class="kpi-v purple">${totalOutput}</div><div class="kpi-n">this month</div></div>
+    <div class="kpi"><div class="kpi-l">${isEd?'Revision Rounds':'Avg Completion'}</div><div class="kpi-v">${isEd?totalRevs:(avgComp!==null?avgComp+'%':'—')}</div><div class="kpi-n">${isEd?'total this month':'task completion rate'}</div></div>`;
+
+  // ── HEATMAP ──
+  let heatHtml='';
+  for(let d=1;d<=daysInMonth;d++){
+    const ds=`${yr}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const e=mEntries.find(x=>x.date===ds);
+    const isFuture=new Date(yr,mo-1,d)>now;
+    let cls='hm-day',tip='';
+    if(isFuture){cls+=' future';tip=ds;}
+    else if(!e){tip=`${ds} — No entry`;}
+    else if(e.status==='active'){cls+=' active';tip=`${ds} — Active${isEd?', '+e.vids+' videos':', '+e.assets+' assets'}`;}
+    else if(e.status==='break'){cls+=' break';tip=`${ds} — On a Break`;}
+    else if(e.status==='inactive'){cls+=' inactive';tip=`${ds} — Inactive`;}
+    else{cls+=' logged';tip=`${ds} — Logged`;}
+    heatHtml+=`<div class="${cls}"><div class="hm-tip">${tip}</div></div>`;
+  }
+  document.getElementById('rp-heatmap').innerHTML=heatHtml;
+
+  // ── COMPLETION CHART (ACD only; editors show vids per day) ──
+  const compContainer=document.getElementById('rp-completion');
+  const loggedE=mEntries.filter(e=>e.date<=(isCurrentMonth?fd(now):`${yr}-${String(mo).padStart(2,'0')}-${String(daysInMonth).padStart(2,'0')}`));
+  const chartE=loggedE.slice(-15); // last 15 logged days
+  if(!chartE.length){
+    compContainer.innerHTML=`<div class="cc-empty">No data logged this month yet.</div>`;
+  } else {
+    const maxVal=isEd?Math.max(...chartE.map(e=>e.vids||0),1):100;
+    compContainer.innerHTML=chartE.map(e=>{
+      const val=isEd?(e.vids||0):( e.tt>0?Math.round((e.td/e.tt)*100):0 );
+      const h=Math.round((val/maxVal)*100);
+      const day=new Date(e.date+'T12:00:00').getDate();
+      const full=!isEd&&val>=100;
+      return`<div class="cc-bar-wrap"><div class="cc-pct">${isEd?val:val+'%'}</div><div class="cc-bar${full?' full':''}" style="height:${Math.max(h,2)}px"></div><div class="cc-label">${day}</div></div>`;
+    }).join('');
+  }
+
+  // ── ASSET / OUTPUT BREAKDOWN BY PROJECT ──
+  document.getElementById('rp-asset-title').textContent=isEd?'Videos by Project':'Assets by Project';
+  const projMap={};
+  mEntries.forEach(e=>{
+    const p=e.proj||'Unassigned';
+    if(!projMap[p])projMap[p]=0;
+    projMap[p]+=(isEd?(+e.vids||0):(+e.assets||0));
+  });
+  const projArr=Object.entries(projMap).sort((a,b)=>b[1]-a[1]);
+  const maxProj=projArr.length?projArr[0][1]:1;
+  document.getElementById('rp-assets').innerHTML=projArr.length
+    ?projArr.map(([proj,val])=>`<div class="al-row"><span class="al-label" title="${proj}">${proj}</span><div class="al-bar-wrap"><div class="al-bar ${m.role==='editor'?'purple':''}" style="width:${Math.round((val/maxProj)*100)}%"></div></div><span class="al-val">${val}</span></div>`).join('')
+    :`<p style="font-size:13px;color:var(--t3);">No output data this month.</p>`;
+
+  // ── DAY TABLE ──
+  document.getElementById('rp-table-head').innerHTML=isEd
+    ?`<tr><th>Date</th><th>Project</th><th>Status</th><th>Videos</th><th>Revisions</th><th>Blocker</th></tr>`
+    :`<tr><th>Date</th><th>Project</th><th>Status</th><th>Tasks</th><th>Assets</th><th>Completion</th><th>Tool</th><th>Blocker</th></tr>`;
+
+  const sortedE=mEntries.slice().sort((a,b)=>a.date<b.date?1:-1);
+  document.getElementById('rp-table-body').innerHTML=sortedE.length
+    ?sortedE.map(e=>{
+      const sm=STATUS_META[e.status]||{};
+      const statusPill=e.status?`<span class="pill ${e.status==='active'?'g':e.status==='break'?'a':'r'}">${sm.l||e.status}</span>`:`<span style="color:var(--t3)">—</span>`;
+      const dt=new Date(e.date+'T12:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+      const blocker=e.blocker?`<span style="font-size:11px;color:var(--amber);">⚠ ${e.blocker}</span>`:'—';
+      if(isEd){
+        return`<tr><td style="font-family:'DM Mono',monospace;font-size:11px;">${dt}</td><td>${e.proj||'—'}</td><td>${statusPill}</td><td style="font-weight:600;">${e.vids||0}</td><td>${e.revs||0}</td><td>${blocker}</td></tr>`;
+      } else {
+        const comp=e.tt>0?Math.round((e.td/e.tt)*100)+'%':'—';
+        return`<tr><td style="font-family:'DM Mono',monospace;font-size:11px;">${dt}</td><td>${e.proj||'—'}</td><td>${statusPill}</td><td style="font-family:'DM Mono',monospace;">${e.td||0}/${e.tt||0}</td><td style="font-weight:600;">${e.assets||0}</td><td style="font-family:'DM Mono',monospace;">${comp}</td><td>${e.tool||'—'}</td><td>${blocker}</td></tr>`;
+      }
+    }).join('')
+    :`<tr><td colspan="8" class="no-data">No entries logged this month.</td></tr>`;
+}
+
+function renderPerf(){selectedPerfMid=null;document.getElementById('report-panel').style.display='none';renderMemberPicker();}
+
+// ── LOG MODALS ──
+let logMemberRole='acd';
+async function openLog(){
+  if(currentRole==='admin'){openAdminAcd(null);return;}
+  // Always reload members from Firebase first
+  showLoader(true);
+  const m=await fbGet('members');
+  if(m){
+    MEMBERS=Array.isArray(m)?m:Object.values(m);
+  }
+  showLoader(false);
+  if(!MEMBERS.length){showT('No members added yet. Ask your Admin to add team members first.');return;}
+  document.getElementById('lf-member').innerHTML=MEMBERS.map(m=>`<option value="${m.id}" data-role="${m.role}">${m.name} (${m.role==='acd'?'ACD':'Editor'})</option>`).join('');
+  document.getElementById('lf-date').value=fd(curDate);
+  ['lf-proj','lf-td','lf-tt','lf-as','lf-pr','lf-hr','lf-ql','lf-notes','lf-vids','lf-revs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('lf-tool').value='Midjourney';
+  document.getElementById('lf-bl').value='';
+  updateLogFields();
+  document.getElementById('lf-member').onchange=updateLogFields;
+  document.getElementById('log-modal').classList.add('open');
+}
+function updateLogFields(){
+  const sel=document.getElementById('lf-member');
+  logMemberRole=sel.options[sel.selectedIndex]?.dataset.role||'acd';
+  const isEd=logMemberRole==='editor';
+  document.getElementById('acd-fields').style.display=isEd?'none':'contents';
+  document.getElementById('editor-fields').style.display=isEd?'block':'none';
+}
+function closeLog(){document.getElementById('log-modal').classList.remove('open');}
+async function saveLog(){
+  const mid=+document.getElementById('lf-member').value;
+  if(!mid){showT('Select your name.');return;}
+  const date=document.getElementById('lf-date').value||fd(curDate);
+  if(entries.find(e=>e.mid===mid&&e.date===date)){showT('Already submitted today. Contact Admin to edit.');closeLog();return;}
+  const isEd=logMemberRole==='editor';
+  entries.push({mid,date,role:logMemberRole,
+    proj:document.getElementById('lf-proj').value,
+    tool:isEd?'':document.getElementById('lf-tool').value,
+    td:isEd?0:+document.getElementById('lf-td').value||0,
+    tt:isEd?0:+document.getElementById('lf-tt').value||0,
+    assets:isEd?0:+document.getElementById('lf-as').value||0,
+    prompts:isEd?0:+document.getElementById('lf-pr').value||0,
+    hours:isEd?0:+document.getElementById('lf-hr').value||0,
+    quality:isEd?0:+document.getElementById('lf-ql').value||0,
+    vids:isEd?+document.getElementById('lf-vids').value||0:0,
+    revs:isEd?+document.getElementById('lf-revs').value||0:0,
+    blocker:document.getElementById('lf-bl').value,priority:'Normal',
+    notes:document.getElementById('lf-notes').value,status:''
+  });
+  markAttendance(mid,'present');await saveEntries();await saveAtt();closeLog();render();showT('Log submitted ✓');
+}
+
+// ── ADMIN MODALS ──
+function openAdminAcd(mid=null){
+  document.getElementById('aa-member').innerHTML=MEMBERS.filter(m=>m.role==='acd').map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+  document.getElementById('aa-date').value=fd(curDate);
+  if(mid){
+    document.getElementById('aa-member').value=mid;
+    const e=entries.find(x=>x.date===fd(curDate)&&x.mid===mid)||{};
+    ['proj','td','tt','assets','prompts','hours','quality','notes'].forEach(k=>{const el=document.getElementById('aa-'+k.replace('assets','as').replace('prompts','pr').replace('hours','hr').replace('quality','ql'));if(el)el.value=e[k]||'';});
+    document.getElementById('aa-proj').value=e.proj||'';
+    document.getElementById('aa-td').value=e.td||'';document.getElementById('aa-tt').value=e.tt||'';
+    document.getElementById('aa-as').value=e.assets||'';document.getElementById('aa-pr').value=e.prompts||'';
+    document.getElementById('aa-hr').value=e.hours||'';document.getElementById('aa-ql').value=e.quality||'';
+    document.getElementById('aa-tool').value=e.tool||'Midjourney';
+    document.getElementById('aa-bl').value=e.blocker||'';document.getElementById('aa-prio').value=e.priority||'Normal';
+    document.getElementById('aa-notes').value=e.notes||'';
+    document.getElementById('aa-title').textContent='Edit ACD — '+(MEMBERS.find(m=>m.id===mid)?.name||'');
+  } else {
+    ['aa-proj','aa-td','aa-tt','aa-as','aa-pr','aa-hr','aa-ql','aa-notes'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('aa-tool').value='Midjourney';document.getElementById('aa-bl').value='';document.getElementById('aa-prio').value='Normal';
+    document.getElementById('aa-title').textContent='Log ACD Entry';
+  }
+  document.getElementById('admin-acd-modal').classList.add('open');
+}
+function closeAdminAcd(){document.getElementById('admin-acd-modal').classList.remove('open');}
+async function saveAdminAcd(){
+  const mid=+document.getElementById('aa-member').value;if(!mid){showT('Select a member.');return;}
+  const date=document.getElementById('aa-date').value||fd(curDate);
+  const cur=entries.find(e=>e.mid===mid&&e.date===date);
+  const ent={mid,date,role:'acd',proj:document.getElementById('aa-proj').value,tool:document.getElementById('aa-tool').value,
+    td:+document.getElementById('aa-td').value||0,tt:+document.getElementById('aa-tt').value||0,
+    assets:+document.getElementById('aa-as').value||0,prompts:+document.getElementById('aa-pr').value||0,
+    hours:+document.getElementById('aa-hr').value||0,quality:+document.getElementById('aa-ql').value||0,
+    vids:0,revs:0,blocker:document.getElementById('aa-bl').value,priority:document.getElementById('aa-prio').value,
+    notes:document.getElementById('aa-notes').value,status:cur?cur.status:''};
+  const idx=entries.findIndex(e=>e.mid===mid&&e.date===date);
+  if(idx>-1)entries[idx]=ent;else entries.push(ent);
+  await saveEntries();closeAdminAcd();render();showT('Saved ✓');
+}
+function openAdminEditor(mid=null){
+  document.getElementById('ae-member').innerHTML=MEMBERS.filter(m=>m.role==='editor').map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+  document.getElementById('ae-date').value=fd(curDate);
+  if(mid){
+    document.getElementById('ae-member').value=mid;
+    const e=entries.find(x=>x.date===fd(curDate)&&x.mid===mid)||{};
+    document.getElementById('ae-proj').value=e.proj||'';document.getElementById('ae-vids').value=e.vids||'';
+    document.getElementById('ae-revs').value=e.revs||'';document.getElementById('ae-bl').value=e.blocker||'';
+    document.getElementById('ae-prio').value=e.priority||'Normal';document.getElementById('ae-notes').value=e.notes||'';
+    document.getElementById('ae-title').textContent='Edit Editor — '+(MEMBERS.find(m=>m.id===mid)?.name||'');
+  } else {
+    ['ae-proj','ae-vids','ae-revs','ae-notes'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('ae-bl').value='';document.getElementById('ae-prio').value='Normal';
+    document.getElementById('ae-title').textContent='Log Editor Entry';
+  }
+  document.getElementById('admin-editor-modal').classList.add('open');
+}
+function closeAdminEditor(){document.getElementById('admin-editor-modal').classList.remove('open');}
+async function saveAdminEditor(){
+  const mid=+document.getElementById('ae-member').value;if(!mid){showT('Select a member.');return;}
+  const date=document.getElementById('ae-date').value||fd(curDate);
+  const cur=entries.find(e=>e.mid===mid&&e.date===date);
+  const ent={mid,date,role:'editor',proj:document.getElementById('ae-proj').value,
+    vids:+document.getElementById('ae-vids').value||0,revs:+document.getElementById('ae-revs').value||0,
+    td:0,tt:0,assets:0,prompts:0,hours:0,quality:0,tool:'',
+    blocker:document.getElementById('ae-bl').value,priority:document.getElementById('ae-prio').value,
+    notes:document.getElementById('ae-notes').value,status:cur?cur.status:''};
+  const idx=entries.findIndex(e=>e.mid===mid&&e.date===date);
+  if(idx>-1)entries[idx]=ent;else entries.push(ent);
+  await saveEntries();closeAdminEditor();render();showT('Saved ✓');
+}
+
+// ── ADD MEMBER ──
+function buildSwatches(){document.getElementById('swatches').innerHTML=COLORS.map((c,i)=>`<div class="sw${i===selColor?' on':''}" style="background:${c.bg};border-color:${c.tx}" onclick="pickC(${i})"></div>`).join('');}
+function pickC(i){selColor=i;buildSwatches();}
+function selectMemberRole(r){newMemberRole=r;document.getElementById('rt-acd').className='rt-btn'+(r==='acd'?' on acd':'');document.getElementById('rt-editor').className='rt-btn'+(r==='editor'?' on editor':'');}
+function openAddMember(){newMemberRole='acd';selColor=0;document.getElementById('m-name').value='';document.getElementById('m-spec').value='';selectMemberRole('acd');buildSwatches();document.getElementById('member-modal').classList.add('open');}
+function closeMember(){document.getElementById('member-modal').classList.remove('open');}
+async function saveMember(){
+  const name=document.getElementById('m-name').value.trim();if(!name){showT('Enter a name.');return;}
+  MEMBERS.push({id:nid(MEMBERS),name,spec:document.getElementById('m-spec').value.trim()||'Team Member',ci:selColor,role:newMemberRole});
+  await saveMembers();closeMember();render();renderMemberPicker();showT(name+' added ✓');
+}
+
+function exportCSV(){
+  const sel=fd(curDate);
+  const rows=[['Role','Name','Project','Status','Videos','Revisions','Tasks Done','Total Tasks','Assets','Prompts','Hours','Quality','AI Tool','Blocker','Notes']];
+  MEMBERS.forEach(m=>{const e=entries.find(x=>x.date===sel&&x.mid===m.id)||{};rows.push([m.role==='editor'?'Editor':'ACD',m.name,e.proj||'',e.status||'',e.vids||0,e.revs||0,e.td||0,e.tt||0,e.assets||0,e.prompts||0,e.hours||0,e.quality||'',e.tool||'',e.blocker||'',e.notes||'']);});
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`kyrosity_${sel}.csv`;a.click();showT('CSV downloaded ✓');
+}
+
+// ── CHANGE PIN ──
+function openChangePin(){
+  document.getElementById('cp-current').value='';
+  document.getElementById('cp-new').value='';
+  document.getElementById('cp-confirm').value='';
+  document.getElementById('cp-err').style.display='none';
+  document.getElementById('change-pin-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('cp-current').focus(),100);
+}
+function closeChangePin(){document.getElementById('change-pin-modal').classList.remove('open');}
+async function saveNewPin(){
+  const current=document.getElementById('cp-current').value;
+  const newPin=document.getElementById('cp-new').value;
+  const confirm=document.getElementById('cp-confirm').value;
+  const errEl=document.getElementById('cp-err');
+  errEl.style.display='none';
+  const correctPin=await getAdminPin();
+  if(current!==correctPin){errEl.textContent='Current PIN is incorrect.';errEl.style.display='block';document.getElementById('cp-current').value='';return;}
+  if(newPin.length<4){errEl.textContent='New PIN must be at least 4 digits.';errEl.style.display='block';return;}
+  if(!/^\d+$/.test(newPin)){errEl.textContent='PIN must contain numbers only.';errEl.style.display='block';return;}
+  if(newPin!==confirm){errEl.textContent='New PINs do not match.';errEl.style.display='block';document.getElementById('cp-confirm').value='';return;}
+  await setAdminPin(newPin);
+  closeChangePin();
+  showT('PIN updated successfully ✓');
+}
+
+function showT(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2600);}
+['log-modal','admin-acd-modal','admin-editor-modal','member-modal','leave-modal','change-pin-modal'].forEach(id=>{document.getElementById(id).addEventListener('click',e=>{if(e.target===document.getElementById(id))document.getElementById(id).classList.remove('open');});});
+
+// ══════════════════════════════════
+// CLOCK IN / CLOCK OUT
+// ══════════════════════════════════
+let clockTimers={};  // mid → interval ID
+
+function todayKey(mid){return `${mid}_${today()}`;}
+
+function clockBar(mid){
+  const key=todayKey(mid);
+  const cd=clockData[key]||{};
+  const isClockedIn=cd.clockIn&&!cd.clockOut;
+  const total=cd.total||0;
+  const fmtTime=ts=>ts?new Date(ts).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}):'';
+  const fmtDur=ms=>{if(!ms)return'';const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000);return h?`${h}h ${m}m`:`${m}m`;};
+
+  if(isClockedIn){
+    return`<div class="clock-bar">
+      <div class="clock-time"><div class="clock-dot"></div><span>Clocked in at ${fmtTime(cd.clockIn)}</span><span id="clock-live-${mid}" style="font-weight:600;color:var(--green);margin-left:4px;"></span></div>
+      <button class="clock-btn out" onclick="clockOut(${mid})">Clock Out</button>
+    </div>`;
+  } else if(cd.clockIn&&cd.clockOut){
+    return`<div class="clock-bar">
+      <div class="clock-total">🕐 ${fmtTime(cd.clockIn)} – ${fmtTime(cd.clockOut)} &nbsp;·&nbsp; <strong>${fmtDur(total)}</strong> total</div>
+      <button class="clock-btn in" onclick="clockIn(${mid})" style="font-size:10px;padding:3px 8px;">+ Again</button>
+    </div>`;
+  } else {
+    return`<div class="clock-bar">
+      <span class="clock-total">No clock entry today</span>
+      <button class="clock-btn in" onclick="clockIn(${mid})">Clock In</button>
+    </div>`;
+  }
+}
+
+async function clockIn(mid){
+  const key=todayKey(mid);
+  if(clockData[key]&&clockData[key].clockIn&&!clockData[key].clockOut){showT('Already clocked in.');return;}
+  clockData[key]={clockIn:Date.now(),clockOut:null,total:clockData[key]?.total||0};
+  await saveClock();
+  markAttendance(mid,'present'); // auto-mark present on clock-in
+  render();
+  startLiveTimer(mid);
+  showT('Clocked in ✓');
+}
+
+async function clockOut(mid){
+  const key=todayKey(mid);
+  if(!clockData[key]||!clockData[key].clockIn){showT('Not clocked in.');return;}
+  const now=Date.now();
+  const session=now-clockData[key].clockIn;
+  clockData[key].clockOut=now;
+  clockData[key].total=(clockData[key].total||0)+session;
+  await saveClock();
+  stopLiveTimer(mid);
+  render();
+  showT('Clocked out ✓ — '+fmtDurShort(session)+' session');
+}
+
+function fmtDurShort(ms){const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000);return h?`${h}h ${m}m`:`${m}m`;}
+
+function startLiveTimer(mid){
+  if(clockTimers[mid]) clearInterval(clockTimers[mid]);
+  clockTimers[mid]=setInterval(()=>{
+    const el=document.getElementById('clock-live-'+mid);
+    if(!el){clearInterval(clockTimers[mid]);return;}
+    const key=todayKey(mid);
+    const cd=clockData[key]||{};
+    if(!cd.clockIn||cd.clockOut){clearInterval(clockTimers[mid]);return;}
+    const elapsed=Date.now()-cd.clockIn;
+    el.textContent='('+fmtDurShort(elapsed)+')';
+  },10000);
+  // run immediately
+  const el=document.getElementById('clock-live-'+mid);
+  if(el){const key=todayKey(mid);const cd=clockData[key]||{};if(cd.clockIn&&!cd.clockOut)el.textContent='('+fmtDurShort(Date.now()-cd.clockIn)+')';}
+}
+
+function stopLiveTimer(mid){if(clockTimers[mid])clearInterval(clockTimers[mid]);}
+
+function restoreTimers(){
+  MEMBERS.forEach(m=>{
+    const key=todayKey(m.id);
+    const cd=clockData[key]||{};
+    if(cd.clockIn&&!cd.clockOut) startLiveTimer(m.id);
+  });
+}
+
+// ══════════════════════════════════
+// DAILY REMINDER
+// ══════════════════════════════════
+let reminderInterval=null;
+let reminderDismissedDate='';
+
+function saveReminderTime(){
+  const t=document.getElementById('reminder-time').value;
+  localStorage.setItem('ky3_reminder',t);
+  updateReminderStatus();
+  startReminderWatch();
+  showT('Reminder updated ✓');
+}
+
+function updateReminderStatus(){
+  const t=document.getElementById('reminder-time').value||'18:00';
+  const [h,m]=t.split(':').map(Number);
+  const ampm=h>=12?'PM':'AM';
+  const hh=h%12||12;
+  document.getElementById('reminder-status').textContent=`Reminder set for ${hh}:${String(m).padStart(2,'0')} ${ampm}`;
+}
+
+function testReminder(){showReminderBanner();}
+
+function showReminderBanner(){
+  document.getElementById('reminder-banner').classList.add('show');
+}
+
+function dismissReminder(){
+  reminderDismissedDate=today();
+  document.getElementById('reminder-banner').classList.remove('show');
+}
+
+function startReminderWatch(){
+  if(reminderInterval)clearInterval(reminderInterval);
+  reminderInterval=setInterval(()=>{
+    if(reminderDismissedDate===today())return;
+    const t=localStorage.getItem('ky3_reminder')||'18:00';
+    const [rh,rm]=t.split(':').map(Number);
+    const now=new Date();
+    if(now.getHours()===rh&&now.getMinutes()===rm){
+      showReminderBanner();
+      // Browser notification if allowed
+      if(Notification.permission==='granted'){
+        new Notification('Kyrosity Reminder',{body:'Time to fill your daily log!',icon:''});
+      }
+    }
+  },60000);
+}
+
+function initReminder(){
+  const saved=localStorage.getItem('ky3_reminder')||'18:00';
+  const timeInput=document.getElementById('reminder-time');
+  if(timeInput) timeInput.value=saved;
+  updateReminderStatus();
+  // Request notification permission
+  if(Notification.permission==='default') Notification.requestPermission();
+  startReminderWatch();
+}
+
+// ══════════════════════════════════
+// LEAVE REQUEST SYSTEM
+// ══════════════════════════════════
+function leavenid(){return leaveRequests.length?Math.max(...leaveRequests.map(x=>x.id))+1:1;}
+
+const LEAVE_TYPE_META={
+  full:    {l:'Full Day Leave',      cls:'lt-full'},
+  half:    {l:'Half Day Leave',      cls:'lt-half'},
+  sick:    {l:'Emergency / Sick Leave',cls:'lt-sick'},
+  weekend: {l:'Weekend Working',     cls:'lt-weekend'},
+};
+
+async function openLeaveRequest(){
+  showLoader(true);
+  const m=await fbGet('members');
+  if(m) MEMBERS=Array.isArray(m)?m:Object.values(m);
+  showLoader(false);
+  if(!MEMBERS.length){showT('No members added yet. Ask your Admin to add team members first.');return;}
+  const isAdmin=currentRole==='admin';
+  document.getElementById('lv-member').innerHTML=MEMBERS.map(m=>`<option value="${m.id}">${m.name} (${m.role==='acd'?'ACD':'Editor'})</option>`).join('');
+  document.getElementById('leave-member-wrap').style.display='flex';
+  document.getElementById('lv-from').value=today();
+  document.getElementById('lv-to').value=today();
+  document.getElementById('lv-reason').value='';
+  document.getElementById('lv-type').value='full';
+  document.getElementById('leave-modal').classList.add('open');
+}
+function closeLeaveRequest(){document.getElementById('leave-modal').classList.remove('open');}
+
+async function submitLeaveRequest(){
+  const mid=+document.getElementById('lv-member').value;
+  if(!mid){showT('Select a member.');return;}
+  const from=document.getElementById('lv-from').value;
+  const to=document.getElementById('lv-to').value;
+  if(!from||!to){showT('Please select dates.');return;}
+  if(to<from){showT('End date must be after start date.');return;}
+  const type=document.getElementById('lv-type').value;
+  const reason=document.getElementById('lv-reason').value.trim();
+  const req={
+    id:leavenid(), mid, type, from, to, reason,
+    status:'pending',
+    submittedAt:new Date().toISOString(),
+    submittedBy:currentRole,
+    reviewedAt:null, reviewNote:''
+  };
+  leaveRequests.push(req);
+  await saveLeaves();
+  closeLeaveRequest();
+  updateLeaveBadge();
+  renderLeaves();
+  showT('Leave request submitted ✓');
+}
+
+async function approveLeave(id){
+  const req=leaveRequests.find(r=>r.id===id);
+  if(!req) return;
+  req.status='approved';
+  req.reviewedAt=new Date().toISOString();
+  // Auto-mark attendance for each day in range
+  applyLeaveToAttendance(req);
+  await saveLeaves();
+  updateLeaveBadge();
+  renderLeaves();
+  showT('Leave approved ✓');
+}
+
+async function rejectLeave(id){
+  const req=leaveRequests.find(r=>r.id===id);
+  if(!req) return;
+  req.status='rejected';
+  req.reviewedAt=new Date().toISOString();
+  await saveLeaves();
+  updateLeaveBadge();
+  renderLeaves();
+  showT('Leave rejected.');
+}
+
+async function applyLeaveToAttendance(req){
+  const from=new Date(req.from+'T12:00:00');
+  const to=new Date(req.to+'T12:00:00');
+  for(let d=new Date(from);d<=to;d.setDate(d.getDate()+1)){
+    const ds=fd(d);
+    const dow=d.getDay();
+    // For weekend working — mark as present on weekends
+    if(req.type==='weekend'){
+      if(dow===0||dow===6) attData[attKey(req.mid,ds)]={status:'present',manual:true,date:ds,mid:req.mid,note:'Weekend working (approved)'};
+    } else {
+      const attStatus=req.type==='half'?'halfday':'onleave';
+      attData[attKey(req.mid,ds)]={status:attStatus,manual:true,date:ds,mid:req.mid,note:`Leave approved: ${LEAVE_TYPE_META[req.type].l}`};
+    }
+  }
+  await saveAtt();
+}
+
+function updateLeaveBadge(){
+  const pending=leaveRequests.filter(r=>r.status==='pending').length;
+  const badge=document.getElementById('leave-badge');
+  badge.textContent=pending>0?pending:'';
+  badge.classList.toggle('show',pending>0);
+}
+
+function renderLeaves(){
+  const isAdmin=currentRole==='admin';
+  // Filter: admin sees all, candidate sees only their own
+  const visible=isAdmin?leaveRequests:leaveRequests.filter(r=>{
+    // candidate: show their own requests — we don't track who logged in so show all for now
+    // In a real app you'd filter by logged-in user ID
+    return true;
+  });
+
+  // Summary counts
+  const pending=visible.filter(r=>r.status==='pending').length;
+  const approved=visible.filter(r=>r.status==='approved').length;
+  const rejected=visible.filter(r=>r.status==='rejected').length;
+  document.getElementById('lv-pending').textContent=pending;
+  document.getElementById('lv-approved').textContent=approved;
+  document.getElementById('lv-rejected').textContent=rejected;
+  document.getElementById('lv-total').textContent=visible.length;
+
+  // Leave sub text
+  document.getElementById('leave-sub-text').textContent=isAdmin
+    ?`${pending} pending request${pending!==1?'s':''} waiting for your approval.`
+    :'Submit leave requests below. Admin will approve or reject them.';
+
+  const fmtDate=ds=>new Date(ds+'T12:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+  const dayCount=req=>{
+    const f=new Date(req.from+'T12:00:00'),t=new Date(req.to+'T12:00:00');
+    return Math.round((t-f)/86400000)+1;
+  };
+
+  const cardHtml=(req,showActions)=>{
+    const m=MEMBERS.find(x=>x.id===req.mid)||{name:'?',ci:0,role:'acd'};
+    const c=COLORS[(m.ci||0)%COLORS.length];
+    const tm=LEAVE_TYPE_META[req.type]||{l:req.type,cls:'lt-full'};
+    const days=dayCount(req);
+    const dateRange=req.from===req.to?fmtDate(req.from):`${fmtDate(req.from)} → ${fmtDate(req.to)} (${days} day${days!==1?'s':''})`;
+    const statusCls={pending:'ls-pending',approved:'ls-approved',rejected:'ls-rejected'}[req.status]||'ls-pending';
+    const statusLabel={pending:'⏳ Pending',approved:'✅ Approved',rejected:'❌ Rejected'}[req.status]||req.status;
+    const submittedOn=new Date(req.submittedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+    return`<div class="leave-card ${req.status}">
+      <div class="leave-card-who">
+        <div class="av" style="width:32px;height:32px;font-size:11px;flex-shrink:0;background:${c.bg};color:${c.tx}">${ini(m.name)}</div>
+        <div><div class="leave-card-name">${m.name}</div><div class="leave-card-role-lbl">${m.role==='editor'?'Editor':'ACD'}</div></div>
+      </div>
+      <div class="leave-card-detail">
+        <div class="leave-type-pill ${tm.cls}">${tm.l}</div>
+        <div class="leave-dates">📅 ${dateRange}</div>
+        ${req.reason?`<div class="leave-reason">"${req.reason}"</div>`:''}
+        <div style="font-size:10px;color:var(--t3);margin-top:3px;">Submitted ${submittedOn}</div>
+      </div>
+      <span class="leave-status-pill ${statusCls}">${statusLabel}</span>
+      ${showActions&&req.status==='pending'?`
+        <div class="leave-actions">
+          <button class="la-approve" onclick="approveLeave(${req.id})">Approve</button>
+          <button class="la-reject" onclick="rejectLeave(${req.id})">Reject</button>
+        </div>`:''}
+    </div>`;
+  };
+
+  const pendingList=visible.filter(r=>r.status==='pending').sort((a,b)=>b.submittedAt.localeCompare(a.submittedAt));
+  const historyList=visible.filter(r=>r.status!=='pending').sort((a,b)=>b.submittedAt.localeCompare(a.submittedAt));
+
+  const pendingEl=document.getElementById('leave-pending-list');
+  pendingEl.innerHTML=pendingList.length
+    ?pendingList.map(r=>cardHtml(r,isAdmin)).join('')
+    :`<div class="leave-empty"><div class="big">✅</div>No pending requests.</div>`;
+
+  const historyEl=document.getElementById('leave-history-list');
+  historyEl.innerHTML=historyList.length
+    ?historyList.map(r=>cardHtml(r,false)).join('')
+    :`<div class="leave-empty"><div class="big">📋</div>No request history yet.</div>`;
+
+  updateLeaveBadge();
+}
+
+// ── AUTO-ABSENT: mark absent if no activity logged by midnight ──
+async function runAutoAbsent(){
+  const t=today();
+  const now=new Date();
+  for(const m of MEMBERS){
+    const key=attKey(m.id,t);
+    if(attData[key]) continue;
+    const hasLog=entries.some(e=>e.mid===m.id&&e.date===t);
+    const hasClock=clockData[`${m.id}_${t}`]?.clockIn;
+    const hasLeave=leaveRequests.some(r=>r.mid===m.id&&r.status==='approved'&&r.from<=t&&r.to>=t);
+    if(!hasLog&&!hasClock&&!hasLeave&&now.getHours()>=23){
+      attData[key]={status:'absent',auto:true,date:t,mid:m.id,note:'Auto-marked: no activity'};
+      await saveAtt();
+    }
+  }
+}
+
+// Seed demo leave requests
+
+// ══════════════════════════════════
+const ATT_META={
+  present: {l:'Present',  cls:'present', dot:'#2a7a45'},
+  absent:  {l:'Absent',   cls:'absent',  dot:'#a02020'},
+  halfday: {l:'Half Day', cls:'halfday', dot:'#b07010'},
+  onleave: {l:'On Leave', cls:'onleave', dot:'#1a4e8a'},
+};
+
+function attKey(mid,date){return `${mid}_${date}`;}
+
+async function markAttendance(mid,status,date=null){
+  const d=date||today();
+  const key=attKey(mid,d);
+  // Don't overwrite manual admin override
+  if(attData[key]&&attData[key].manual&&status!=='manual') return;
+  attData[key]={status,auto:!date,date:d,mid};
+  await saveAtt();
+}
+
+async function overrideAttendance(mid,date,status){
+  if(!status){delete attData[attKey(mid,date)];await saveAtt();renderAttendance();return;}
+  attData[attKey(mid,date)]={status,manual:true,date,mid};
+  await saveAtt();renderAttendance();
+  showT('Attendance updated ✓');
+}
+
+function getAtt(mid,date){return attData[attKey(mid,date)]||null;}
+
+function renderAttendance(){
+  const now=new Date();
+  // Populate month selector
+  const sel=document.getElementById('att-month');
+  if(!sel.options.length){
+    for(let i=0;i<6;i++){
+      const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+      const val=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      sel.innerHTML+=`<option value="${val}"${i===0?' selected':''}>${d.toLocaleDateString('en-IN',{month:'long',year:'numeric'})}</option>`;
+    }
+  }
+  const monthVal=sel.value||`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const [yr,mo]=monthVal.split('-').map(Number);
+  const daysInMonth=new Date(yr,mo,0).getDate();
+  const prefix=`${yr}-${String(mo).padStart(2,'0')}`;
+  const isCurrentMonth=now.getFullYear()===yr&&now.getMonth()+1===mo;
+  const lastDay=isCurrentMonth?now.getDate():daysInMonth;
+
+  // ── Summary counts (all members × all days in month) ──
+  let counts={present:0,absent:0,halfday:0,onleave:0};
+  MEMBERS.forEach(m=>{
+    for(let d=1;d<=lastDay;d++){
+      const ds=`${prefix}-${String(d).padStart(2,'0')}`;
+      const dow=new Date(ds+'T12:00:00').getDay();
+      if(dow===0||dow===6) continue; // skip weekends
+      const a=getAtt(m.id,ds);
+      if(a&&ATT_META[a.status]) counts[a.status]=(counts[a.status]||0)+1;
+    }
+  });
+  document.getElementById('att-s-present').textContent=counts.present||'0';
+  document.getElementById('att-s-absent').textContent=counts.absent||'0';
+  document.getElementById('att-s-half').textContent=counts.halfday||'0';
+  document.getElementById('att-s-leave').textContent=counts.onleave||'0';
+
+  // ── Today's table ──
+  const todayStr=today();
+  const fmtTime=ts=>ts?new Date(ts).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}):'—';
+  const fmtDur=ms=>{if(!ms)return'—';const h=Math.floor(ms/3600000),m2=Math.floor((ms%3600000)/60000);return h?`${h}h ${m2}m`:`${m2}m`;};
+
+  document.getElementById('att-today-body').innerHTML=MEMBERS.map(m=>{
+    const a=getAtt(m.id,todayStr);
+    const ck=clockData[`${m.id}_${todayStr}`]||{};
+    const meta=a?ATT_META[a.status]:null;
+    const attPill=meta
+      ?`<span class="ap ${meta.cls}"><div class="ap-dot" style="background:${meta.dot}"></div>${meta.l}</span>`
+      :`<span class="ap notmarked">Not Marked</span>`;
+    const c=COLORS[m.ci%COLORS.length];
+    const isAdmin=currentRole==='admin';
+    const overrideHtml=isAdmin?`<select class="att-sel" onchange="overrideAttendance(${m.id},'${todayStr}',this.value)">
+      <option value="">— Override —</option>
+      ${Object.entries(ATT_META).map(([k,v])=>`<option value="${k}"${a?.status===k?' selected':''}>${v.l}</option>`).join('')}
+      <option value="">Clear</option>
+    </select>`:``;
+    return`<tr>
+      <td><div style="display:flex;align-items:center;gap:8px;"><div class="av" style="width:28px;height:28px;font-size:10px;background:${c.bg};color:${c.tx}">${ini(m.name)}</div><strong>${m.name}</strong></div></td>
+      <td><span class="sec-tag ${m.role==='editor'?'editor':'acd'}" style="font-size:10px;">${m.role==='editor'?'Editor':'ACD'}</span></td>
+      <td>${attPill}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px;">${fmtTime(ck.clockIn)}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px;">${fmtTime(ck.clockOut)}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px;font-weight:600;">${fmtDur(ck.total)}</td>
+      <td>${overrideHtml}</td>
+    </tr>`;
+  }).join('')||`<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--t3);">No members added yet.</td></tr>`;
+
+  // ── Individual member attendance cards ──
+  renderMemberAttCards(monthVal);
+}
+
+function renderAttCalendar(){renderAttendance();}
+
+function renderMemberAttCards(monthVal){
+  const now=new Date();
+  const mv=monthVal||document.getElementById('att-month').value;
+  const [yr,mo]=mv.split('-').map(Number);
+  const daysInMonth=new Date(yr,mo,0).getDate();
+  const prefix=`${yr}-${String(mo).padStart(2,'0')}`;
+  const isCurrentMonth=now.getFullYear()===yr&&now.getMonth()+1===mo;
+  const lastDay=isCurrentMonth?now.getDate():daysInMonth;
+  const fmtDur=ms=>{if(!ms)return'—';const h=Math.floor(ms/3600000),m2=Math.floor((ms%3600000)/60000);return h?`${h}h ${m2}m`:`${m2}m`;};
+
+  let totalWorkdays=0;
+  for(let d=1;d<=lastDay;d++){const dow=new Date(yr,mo-1,d).getDay();if(dow!==0&&dow!==6)totalWorkdays++;}
+
+  const dayLabels=['S','M','T','W','T','F','S'];
+  const container=document.getElementById('att-member-cards');
+  const acds=MEMBERS.filter(m=>m.role==='acd');
+  const eds=MEMBERS.filter(m=>m.role==='editor');
+
+  const renderGroup=(members,roleLabel,roleClass)=>{
+    if(!members.length) return '';
+    let out=`<div class="att-member-section">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+        <span class="sec-tag ${roleClass}">${roleLabel}</span>
+        <span class="sec-t">${roleLabel==='ACD'?'Associate Creative Directors':'Editors'}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(460px,1fr));gap:16px;">`;
+
+    members.forEach(m=>{
+      const c=COLORS[m.ci%COLORS.length];
+      let present=0,absent=0,halfday=0,onleave=0,totalMs=0;
+      for(let d=1;d<=lastDay;d++){
+        const ds=`${prefix}-${String(d).padStart(2,'0')}`;
+        const dow=new Date(ds+'T12:00:00').getDay();
+        if(dow===0||dow===6) continue;
+        const a=getAtt(m.id,ds);
+        if(a){if(a.status==='present')present++;else if(a.status==='absent')absent++;else if(a.status==='halfday')halfday++;else if(a.status==='onleave')onleave++;}
+        const ck=clockData[`${m.id}_${ds}`]||{};
+        totalMs+=(ck.total||0);
+      }
+      const presenceRate=totalWorkdays>0?Math.round(((present+halfday*0.5)/totalWorkdays)*100):0;
+      const notMarked=Math.max(0,totalWorkdays-present-absent-halfday-onleave);
+      const firstDow=new Date(yr,mo-1,1).getDay();
+      let calHtml=dayLabels.map(d=>`<div class="amc-day-label">${d}</div>`).join('');
+      for(let i=0;i<firstDow;i++) calHtml+=`<div class="amc-day empty"></div>`;
+      for(let d=1;d<=daysInMonth;d++){
+        const ds=`${prefix}-${String(d).padStart(2,'0')}`;
+        const date=new Date(ds+'T12:00:00');
+        const dow=date.getDay();
+        const isFuture=date>now;
+        const isToday=ds===today();
+        const isWeekend=dow===0||dow===6;
+        const a=getAtt(m.id,ds);
+        let cls='amc-day',tag='';
+        if(isWeekend)cls+=' weekend';
+        else if(isFuture)cls+=' future';
+        else if(a?.status==='present'){cls+=' cd-present';tag='P';}
+        else if(a?.status==='absent'){cls+=' cd-absent';tag='A';}
+        else if(a?.status==='halfday'){cls+=' cd-halfday';tag='H';}
+        else if(a?.status==='onleave'){cls+=' cd-onleave';tag='L';}
+        else cls+=' cd-none';
+        if(isToday) cls+=' today-hl';
+        calHtml+=`<div class="${cls}"><div class="amc-day-num">${d}</div><div class="amc-day-tag">${tag}</div></div>`;
+      }
+      const bP=totalWorkdays?Math.round((present/totalWorkdays)*100):0;
+      const bH=totalWorkdays?Math.round((halfday/totalWorkdays)*100):0;
+      const bL=totalWorkdays?Math.round((onleave/totalWorkdays)*100):0;
+      const bA=totalWorkdays?Math.round((absent/totalWorkdays)*100):0;
+
+      out+=`<div class="att-member-card ${roleClass==='acd'?'acd-card':'editor-card'}">
+        <div class="amc-head">
+          <div class="av" style="width:40px;height:40px;font-size:14px;flex-shrink:0;background:${c.bg};color:${c.tx}">${ini(m.name)}</div>
+          <div class="amc-info"><div class="amc-name">${m.name}</div><div class="amc-role">${m.spec} · ${roleLabel}</div></div>
+          <div class="amc-rate">
+            <div class="amc-rate-v" style="color:${presenceRate>=90?'var(--green)':presenceRate>=70?'var(--amber)':'#a02020'}">${presenceRate}%</div>
+            <div class="amc-rate-l">Presence Rate</div>
+          </div>
+        </div>
+        <div class="amc-stats">
+          <div class="amc-stat"><div class="amc-stat-v green">${present}</div><div class="amc-stat-l">Present</div></div>
+          <div class="amc-stat"><div class="amc-stat-v red">${absent}</div><div class="amc-stat-l">Absent</div></div>
+          <div class="amc-stat"><div class="amc-stat-v amber">${halfday}</div><div class="amc-stat-l">Half Day</div></div>
+          <div class="amc-stat"><div class="amc-stat-v blue">${onleave}</div><div class="amc-stat-l">On Leave</div></div>
+          <div class="amc-stat"><div class="amc-stat-v">${fmtDur(totalMs)}</div><div class="amc-stat-l">Total Time</div></div>
+        </div>
+        <div class="amc-cal">
+          <div class="amc-cal-title">${new Date(yr,mo-1,1).toLocaleDateString('en-IN',{month:'long',year:'numeric'})}</div>
+          <div class="amc-cal-grid">${calHtml}</div>
+          <div class="amc-bar">
+            <div class="amc-bar-seg" style="width:${bP}%;background:var(--green);border-radius:20px 0 0 20px;"></div>
+            <div class="amc-bar-seg" style="width:${bH}%;background:var(--amber);"></div>
+            <div class="amc-bar-seg" style="width:${bL}%;background:var(--blue);"></div>
+            <div class="amc-bar-seg" style="width:${bA}%;background:#e08080;border-radius:0 20px 20px 0;"></div>
+          </div>
+          <div class="amc-legend">
+            <div class="amc-leg"><div class="amc-leg-dot" style="background:var(--green)"></div>Present (${present})</div>
+            <div class="amc-leg"><div class="amc-leg-dot" style="background:var(--amber)"></div>Half Day (${halfday})</div>
+            <div class="amc-leg"><div class="amc-leg-dot" style="background:var(--blue)"></div>On Leave (${onleave})</div>
+            <div class="amc-leg"><div class="amc-leg-dot" style="background:#e08080"></div>Absent (${absent})</div>
+            <div class="amc-leg"><div class="amc-leg-dot" style="background:var(--bg);border:1px solid var(--border-s)"></div>Not Marked (${notMarked})</div>
+          </div>
+        </div>
+      </div>`;
+    });
+    out+='</div></div>';
+    return out;
+  };
+
+  container.innerHTML=renderGroup(acds,'ACD','acd')+renderGroup(eds,'Editor','editor');
+  if(!MEMBERS.length) container.innerHTML=`<div class="empty-state"><div class="big">👥</div><p>No team members added yet.</p></div>`;
+}
+
+function exportAttCSV(){
+  const sel=document.getElementById('att-month');
+  const mv=sel.value;
+  const [yr,mo]=mv.split('-').map(Number);
+  const daysInMonth=new Date(yr,mo,0).getDate();
+  const prefix=`${yr}-${String(mo).padStart(2,'0')}`;
+  const header=['Name','Role',...Array.from({length:daysInMonth},(_,i)=>`${String(i+1).padStart(2,'0')} ${new Date(yr,mo-1,i+1).toLocaleDateString('en-IN',{weekday:'short'})}`),'Present','Absent','Half Day','On Leave'];
+  const rows=[header];
+  MEMBERS.forEach(m=>{
+    let present=0,absent=0,half=0,leave=0;
+    const days=Array.from({length:daysInMonth},(_,i)=>{
+      const ds=`${prefix}-${String(i+1).padStart(2,'0')}`;
+      const a=getAtt(m.id,ds);
+      const v=a?ATT_META[a.status]?.l||'':new Date(ds+'T12:00:00').getDay()%6===0?'Weekend':'';
+      if(a?.status==='present')present++;
+      else if(a?.status==='absent')absent++;
+      else if(a?.status==='halfday')half++;
+      else if(a?.status==='onleave')leave++;
+      return v;
+    });
+    rows.push([m.name,m.role==='editor'?'Editor':'ACD',...days,present,absent,half,leave]);
+  });
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download=`kyrosity_attendance_${mv}.csv`;
+  a.click();
+  showT('Attendance CSV downloaded ✓');
+}
+
+// Seed demo attendance for existing entries
+
+(function(){
+  updHeader();
+})();
+</script>
+</body>
+</html>
